@@ -35,7 +35,7 @@ def test_morph_pdfgetter(rpoly):
     assert np.allclose(x_morph_out, x_morph_expected)
     assert np.allclose(y_target, y_target_out)
     assert np.allclose(x_target, x_target_out)
-    #Plotting code for PR
+    #Plotting code for PR 31
     plt.figure()
     plt.plot(x_morph,y_morph,color='purple', label='morph')
     plt.plot(x_morph_out,y_morph_out, color = 'gold', label='morphed')
