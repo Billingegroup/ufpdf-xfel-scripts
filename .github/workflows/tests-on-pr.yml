@@ -6,9 +6,9 @@ on:
 
 jobs:
   tests-on-pr:
-    uses: Billingegroup/release-scripts/.github/workflows/_tests-on-pr.yml@v0
+    uses: scikit-package/release-scripts/.github/workflows/_tests-on-pr.yml@v0
     with:
-      project: bglk_euxfel
+      project: bglk-euxfel
       c_extension: false
       headless: false
     secrets:
