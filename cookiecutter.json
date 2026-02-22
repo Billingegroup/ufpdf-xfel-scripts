@@ -1,0 +1,20 @@
+{
+  "author_names": "Luis Kitsu, Simon Billinge",
+  "author_emails": "luki2322@colorado.edu, sbillinge@ucsb.edu",
+  "maintainer_names": "Luis Kitsu, Simon Billinge",
+  "maintainer_emails": "luki2322@colorado.edu, sbillinge@ucsb.edu",
+  "maintainer_github_usernames": "luisLkitsu, sbillinge",
+  "contributors": "Luis Kitsu",
+  "license_holders": "Luis Kitsu, Simon Billinge and blkl project contributors",
+  "project_name": "bglk-euxfel",
+  "github_username_or_orgname": "billingegroup",
+  "github_repo_name": "bglk-euxfel",
+  "conda_pypi_package_dist_name": "bglk-euxfel",
+  "package_dir_name": "bglk_euxfel",
+  "project_short_description": "Scripts and code for XFEL experiments to do ultrafast PDF measurements",
+  "project_keywords": "diffraction, PDF, X-ray, XFEL, ufPDF",
+  "minimum_supported_python_version": "3.12",
+  "maximum_supported_python_version": "3.14",
+  "project_needs_c_code_compiled": "No",
+  "project_has_gui_tests": "No"
+}

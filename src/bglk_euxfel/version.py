@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 ##############################################################################
 #
-# (c) 2025 The Trustees of Columbia University in the City of New York.
+# (c) 2026 Luis Kitsu, Simon Billinge and blkl project contributors.
 # All rights reserved.
 #
-# File coded by: Billinge Group members and community contributors.
+# File coded by: Luis Kitsu.
 #
 # See GitHub contributions for a more detailed list of contributors.
-# https://github.com/billingegroup/bglk_euxfel/graphs/contributors
+# https://github.com/billingegroup/bglk-euxfel/graphs/contributors  # noqa: E501
 #
 # See LICENSE.rst for license information.
 #
@@ -18,8 +18,9 @@
 #  __all__ = ["__date__", "__git_commit__", "__timestamp__", "__version__"]
 
 # obtain version information
-from importlib.metadata import version
+from importlib.metadata import PackageNotFoundError, version
 
-__version__ = version("bglk_euxfel")
-
-# End of file
+try:
+    __version__ = version("bglk_euxfel")
+except PackageNotFoundError:
+    __version__ = "unknown"

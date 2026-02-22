@@ -3,7 +3,7 @@
 |title|
 =======
 
-.. |title| replace:: bglk_euxfel package
+.. |title| replace:: bglk-euxfel package
 
 .. automodule:: bglk_euxfel
     :members:

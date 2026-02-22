@@ -1,0 +1,11 @@
+numpy
+scipy
+diffpy.utils
+matplotlib
+bg-mpl-stylesheets
+jupyter
+nbstripout
+xarray
+diffpy.morph
+pandas
+h5py

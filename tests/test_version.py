@@ -1,6 +1,6 @@
 """Unit tests for __version__.py."""
 
-import bglk_euxfel
+import bglk_euxfel  # noqa
 
 
 def test_package_version():

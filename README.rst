@@ -1,39 +1,42 @@
 |Icon| |title|_
 ===============
 
-.. |title| replace:: bglk_euxfel
-.. _title: https://billingegroup.github.io/bglk_euxfel
+.. |title| replace:: bglk-euxfel
+.. _title: https://billingegroup.github.io/bglk-euxfel
 
 .. |Icon| image:: https://avatars.githubusercontent.com/billingegroup
-        :target: https://billingegroup.github.io/bglk_euxfel
+        :target: https://billingegroup.github.io/bglk-euxfel
         :height: 100px
 
-|PyPi| |Forge| |PythonVersion| |PR|
+|PyPI| |Forge| |PythonVersion| |PR|
 
 |CI| |Codecov| |Black| |Tracking|
 
 .. |Black| image:: https://img.shields.io/badge/code_style-black-black
         :target: https://github.com/psf/black
 
-.. |CI| image:: https://github.com/billingegroup/bglk_euxfel/actions/workflows/matrix-and-codecov-on-merge-to-main.yml/badge.svg
-        :target: https://github.com/billingegroup/bglk_euxfel/actions/workflows/matrix-and-codecov-on-merge-to-main.yml
+.. |CI| image:: https://github.com/billingegroup/bglk-euxfel/actions/workflows/matrix-and-codecov-on-merge-to-main.yml/badge.svg
+        :target: https://github.com/billingegroup/bglk-euxfel/actions/workflows/matrix-and-codecov-on-merge-to-main.yml
 
-.. |Codecov| image:: https://codecov.io/gh/billingegroup/bglk_euxfel/branch/main/graph/badge.svg
-        :target: https://codecov.io/gh/billingegroup/bglk_euxfel
+.. |Codecov| image:: https://codecov.io/gh/billingegroup/bglk-euxfel/branch/main/graph/badge.svg
+        :target: https://codecov.io/gh/billingegroup/bglk-euxfel
 
-.. |Forge| image:: https://img.shields.io/conda/vn/conda-forge/bglk_euxfel
-        :target: https://anaconda.org/conda-forge/bglk_euxfel
+.. |Forge| image:: https://img.shields.io/conda/vn/conda-forge/bglk-euxfel
+        :target: https://anaconda.org/conda-forge/bglk-euxfel
 
 .. |PR| image:: https://img.shields.io/badge/PR-Welcome-29ab47ff
+        :target: https://github.com/billingegroup/bglk-euxfel/pulls
 
-.. |PyPi| image:: https://img.shields.io/pypi/v/bglk_euxfel
-        :target: https://pypi.org/project/bglk_euxfel/
+.. |PyPI| image:: https://img.shields.io/pypi/v/bglk-euxfel
+        :target: https://pypi.org/project/bglk-euxfel/
 
-.. |PythonVersion| image:: https://img.shields.io/pypi/pyversions/bglk_euxfel
-        :target: https://pypi.org/project/bglk_euxfel/
+.. |PythonVersion| image:: https://img.shields.io/pypi/pyversions/bglk-euxfel
+        :target: https://pypi.org/project/bglk-euxfel/
 
 .. |Tracking| image:: https://img.shields.io/badge/issue_tracking-github-blue
-        :target: https://github.com/billingegroup/bglk_euxfel/issues
+        :target: https://github.com/billingegroup/bglk-euxfel/issues
+
+Scripts and code for XFEL experiments to do ultrafast PDF measurements
 
 Analysis scripts for assessing ultrafast pump probe powder diffraction and PDF measurements.
 
@@ -49,12 +52,14 @@ To use the Jupyter notebooks, please use the instructions in the `Getting Starte
 
 For more information about the `bglk_euxfel` library, please consult our `online documentation <https://billingegroup.github.io/bglk_euxfel>`_.
 
+For more information about the bglk-euxfel library, please consult our `online documentation <https://billingegroup.github.io/bglk-euxfel>`_.
+
 Citation
 --------
 
-If you use bglk_euxfel in a scientific publication, we would like you to cite this package as
+If you use bglk-euxfel in a scientific publication, we would like you to cite this package as
 
-        bglk_euxfel Package, https://github.com/billingegroup/bglk_euxfel
+        bglk-euxfel Package, https://github.com/billingegroup/bglk-euxfel
 
 Installation
 ------------
@@ -68,39 +73,42 @@ To add "conda-forge" to the conda channels, run the following in a terminal. ::
         conda config --add channels conda-forge
 
 We want to install our packages in a suitable conda environment.
-The following creates and activates a new environment named ``bglk_euxfel_env`` ::
+The following creates and activates a new environment named ``bglk-euxfel_env`` ::
 
-        conda create -n bglk_euxfel_env bglk_euxfel
-        conda activate bglk_euxfel_env
-
-To confirm that the installation was successful, type ::
-
-        python -c "import bglk_euxfel; print(bglk_euxfel.__version__)"
+        conda create -n bglk-euxfel_env bglk-euxfel
+        conda activate bglk-euxfel_env
 
 The output should print the latest version displayed on the badges above.
 
 If the above does not work, you can use ``pip`` to download and install the latest release from
 `Python Package Index <https://pypi.python.org>`_.
-To install using ``pip`` into your ``bglk_euxfel_env`` environment, type ::
+To install using ``pip`` into your ``bglk-euxfel_env`` environment, type ::
 
-        pip install bglk_euxfel
+        pip install bglk-euxfel
 
 If you prefer to install from sources, after installing the dependencies, obtain the source archive from
-`GitHub <https://github.com/billingegroup/bglk_euxfel/>`_. Once installed, ``cd`` into your ``bglk_euxfel`` directory
+`GitHub <https://github.com/billingegroup/bglk-euxfel/>`_. Once installed, ``cd`` into your ``bglk-euxfel`` directory
 and run the following ::
 
         pip install .
 
+This package also provides command-line utilities. To check the software has been installed correctly, type ::
+
+        bglk-euxfel --version
+
+You can also type the following command to verify the installation. ::
+
+        python -c "import bglk_euxfel; print(bglk_euxfel.__version__)"
+
+
+To view the basic usage and available commands, type ::
+
+        bglk-euxfel -h
+
 Getting Started
 ---------------
 
-You may consult our `online documentation <https://billingegroup.github.io/bglk_euxfel>`_ for tutorials and API references.
-
-Code for assessing figures of merit from ultrafast pump-probed data from the EuXFEL.  This was first written
-for the experiment in March 2025
-
-We are working on a cli but there are also Jupyter scripts in `src/bglk_euxfel/scripts`
-Functions are in `src/bglk_euxfel/functions.py` and plotters in `src/bglk_euxfel/plotters.py`
+You may consult our `online documentation <https://billingegroup.github.io/bglk-euxfel>`_ for tutorials and API references.
 
 ## Installation
 
@@ -203,3 +211,42 @@ Contact
 -------
 
 For more information on bglk_euxfel please visit the project `web-page <https://billingegroup.github.io/>`_ or email Prof. Simon J. L. Billinge at sb2896@columbia.edu.
+
+
+Support and Contribute
+----------------------
+
+If you see a bug or want to request a feature, please `report it as an issue <https://github.com/billingegroup/bglk-euxfel/issues>`_ and/or `submit a fix as a PR <https://github.com/billingegroup/bglk-euxfel/pulls>`_.
+
+Feel free to fork the project and contribute. To install bglk-euxfel
+in a development mode, with its sources being directly used by Python
+rather than copied to a package directory, use the following in the root
+directory ::
+
+        pip install -e .
+
+To ensure code quality and to prevent accidental commits into the default branch, please set up the use of our pre-commit
+hooks.
+
+1. Install pre-commit in your working environment by running ``conda install pre-commit``.
+
+2. Initialize pre-commit (one time only) ``pre-commit install``.
+
+Thereafter your code will be linted by black and isort and checked against flake8 before you can commit.
+If it fails by black or isort, just rerun and it should pass (black and isort will modify the files so should
+pass after they are modified). If the flake8 test fails please see the error messages and fix them manually before
+trying to commit again.
+
+Improvements and fixes are always appreciated.
+
+Before contributing, please read our `Code of Conduct <https://github.com/billingegroup/bglk-euxfel/blob/main/CODE-OF-CONDUCT.rst>`_.
+
+Contact
+-------
+
+For more information on bglk-euxfel please visit the project `web-page <https://billingegroup.github.io/>`_ or email the maintainers ``Luis Kitsu(luki2322@colorado.edu) and Simon Billinge(sbillinge@ucsb.edu)``.
+
+Acknowledgements
+----------------
+
+``bglk-euxfel`` is built and maintained with `scikit-package <https://scikit-package.github.io/scikit-package/>`_.

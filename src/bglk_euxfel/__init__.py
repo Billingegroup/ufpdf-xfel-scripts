@@ -1,22 +1,21 @@
 #!/usr/bin/env python
 ##############################################################################
 #
-# (c) 2025 The Trustees of Columbia University in the City of New York.
+# (c) 2026 Luis Kitsu, Simon Billinge and blkl project contributors.
 # All rights reserved.
 #
-# File coded by: Billinge Group members and community contributors.
+# File coded by: Luis Kitsu.
 #
 # See GitHub contributions for a more detailed list of contributors.
-# https://github.com/billingegroup/bglk_euxfel/graphs/contributors
+# https://github.com/billingegroup/bglk-euxfel/graphs/contributors
 #
 # See LICENSE.rst for license information.
 #
 ##############################################################################
-"""Analysis scripts for assessing ultrafast pump probe powder diffraction and
-PDF measurements."""
+"""Scripts and code for XFEL experiments to do ultrafast PDF measurements."""
 
 # package version
-from bglk_euxfel.version import __version__
+from bglk_euxfel.version import __version__  # noqa
 
 # silence the pyflakes syntax checker
 assert __version__ or True
