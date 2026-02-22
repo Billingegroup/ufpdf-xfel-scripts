@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# bglk_euxfel documentation build configuration file, created by
+# bglk-euxfel documentation build configuration file, created by  # noqa: E501
 # sphinx-quickstart on Thu Jan 30 15:49:41 2014.
 #
 # This file is execfile()d with the current directory set to its
@@ -18,15 +18,21 @@ import time
 from importlib.metadata import version
 from pathlib import Path
 
+# Attempt to import the version dynamically from GitHub tag.
+try:
+    fullversion = version("bglk_euxfel")
+except Exception:
+    fullversion = "No version found. The correct version will appear in the released version."  # noqa: E501
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
-# documentation root, use Path().resolve() to make it absolute, like shown here.
+# documentation root, use Path().resolve() to make it absolute, like shown here.  # noqa: E501
 # sys.path.insert(0, str(Path(".").resolve()))
 sys.path.insert(0, str(Path("../..").resolve()))
 sys.path.insert(0, str(Path("../../src").resolve()))
 
 # abbreviations
-ab_authors = "Billinge Group members and community contributors"
+ab_authors = "Luis Kitsu"
 
 # -- General configuration ------------------------------------------------
 
@@ -43,7 +49,8 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx_rtd_theme",
-    "m2r",
+    "sphinx_copybutton",
+    "m2r2",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -61,14 +68,13 @@ source_suffix = [".rst", ".md"]
 master_doc = "index"
 
 # General information about the project.
-project = "bglk_euxfel"
-copyright = "%Y, The Trustees of Columbia University in the City of New York"
+project = "bglk-euxfel"
+copyright = "%Y, Luis Kitsu, Simon Billinge and blkl project contributors"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-fullversion = version(project)
 # The short X.Y version.
 version = "".join(fullversion.split(".post")[:1])
 # The full version, including alpha/beta/rc tags.
@@ -87,6 +93,11 @@ year = today.split()[-1]
 # today_fmt = '%B %d, %Y'
 # substitute YEAR in the copyright string
 copyright = copyright.replace("%Y", year)
+
+# For sphinx_copybutton extension.
+# Do not copy "$" for shell commands in code-blocks.
+copybutton_prompt_text = r"^\$ "
+copybutton_prompt_is_regexp = True
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -111,7 +122,7 @@ exclude_patterns = ["build"]
 pygments_style = "sphinx"
 
 # A list of ignored prefixes for module index sorting.
-modindex_common_prefix = ["bglk_euxfel"]
+modindex_common_prefix = ["bglk-euxfel"]
 
 # Display all warnings for missing links.
 nitpicky = True
@@ -122,6 +133,14 @@ nitpicky = True
 # a list of builtin themes.
 #
 html_theme = "sphinx_rtd_theme"
+
+html_context = {
+    "display_github": True,
+    "github_user": "billingegroup",
+    "github_repo": "bglk-euxfel",
+    "github_version": "main",
+    "conf_py_path": "/docs/source/",
+}
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -202,7 +221,7 @@ html_theme_options = {
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-basename = "bglk_euxfel".replace(" ", "").replace(".", "")
+basename = "bglk-euxfel".replace(" ", "").replace(".", "")
 htmlhelp_basename = basename + "doc"
 
 
@@ -223,8 +242,8 @@ latex_elements = {
 latex_documents = [
     (
         "index",
-        "bglk_euxfel.tex",
-        "bglk_euxfel Documentation",
+        "bglk-euxfel.tex",
+        "bglk-euxfel Documentation",
         ab_authors,
         "manual",
     ),
@@ -258,8 +277,8 @@ latex_documents = [
 man_pages = [
     (
         "index",
-        "bglk_euxfel",
-        "bglk_euxfel Documentation",
+        "bglk-euxfel",
+        "bglk-euxfel Documentation",
         ab_authors,
         1,
     )
@@ -277,10 +296,10 @@ man_pages = [
 texinfo_documents = [
     (
         "index",
-        "bglk_euxfel",
-        "bglk_euxfel Documentation",
+        "bglk-euxfel",
+        "bglk-euxfel Documentation",
         ab_authors,
-        "bglk_euxfel",
+        "bglk-euxfel",
         "One line description of project.",
         "Miscellaneous",
     ),
