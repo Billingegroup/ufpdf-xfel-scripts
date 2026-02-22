@@ -1,10 +1,10 @@
 Authors
 =======
 
-Billinge Group members and community contributors
+Luis Kitsu
 
 Contributors
 ------------
 
 For a list of contributors, visit
-https://github.com/billingegroup/bglk_euxfel/graphs/contributors
+https://github.com/billingegroup/bglk-euxfel/graphs/contributors
