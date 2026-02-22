@@ -1,6 +1,7 @@
 **Added:**
 
-* <news item>
+* modified the readme
+* new notebook for pyfai workflow at LCLS
 
 **Changed:**
 
