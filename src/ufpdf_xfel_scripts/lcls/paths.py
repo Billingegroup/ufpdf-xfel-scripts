@@ -16,16 +16,16 @@ experiment_dir = (
 synchrotron_data_dir = (
     Path(__file__).parent / ".." / ".." / "data" / "synchrotron-data"
 )
+synchrotron_data_dir = synchrotron_data_dir.resolve()
 experiment_dir = experiment_dir.resolve()
 setup_data_dir = experiment_dir / "scratch" / "setup-data"
-
-experiment_data_dir = experiment_dir / "results" / "hf"
+experiment_data_dir = experiment_dir / "hdf5" / "smalldata"
 
 
 def main():
-    print(experiment_dir)
-    print(synchrotron_data_dir)
-    print(experiment_data_dir)
+    print("experiment_dir=", experiment_dir)
+    print("synchrotron_data_dir=", synchrotron_data_dir)
+    print("experiment_data_dir=", experiment_data_dir)
 
 
 if __name__ == "__main__":
