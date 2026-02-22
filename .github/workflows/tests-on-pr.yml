@@ -8,7 +8,7 @@ jobs:
   tests-on-pr:
     uses: scikit-package/release-scripts/.github/workflows/_tests-on-pr.yml@v0
     with:
-      project: bglk-euxfel
+      project: ufpdf-xfel-scripts
       c_extension: false
       headless: false
     secrets:
