@@ -21,11 +21,14 @@ experiment_dir = experiment_dir.resolve()
 setup_data_dir = experiment_dir / "scratch" / "setup-data"
 experiment_data_dir = experiment_dir / "hdf5" / "smalldata"
 
+global_output_dir = experiment_dir / "scratch" / "users"
+
 
 def main():
     print("experiment_dir=", experiment_dir)
     print("synchrotron_data_dir=", synchrotron_data_dir)
     print("experiment_data_dir=", experiment_data_dir)
+    print("global_output_dir=", global_output_dir)
 
 
 if __name__ == "__main__":
