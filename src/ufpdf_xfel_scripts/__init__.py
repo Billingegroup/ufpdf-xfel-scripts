@@ -16,7 +16,7 @@
 measurements."""
 
 # package version
-from bglk_euxfel.version import __version__  # noqa
+from ufpdf_xfel_scripts.version import __version__  # noqa
 
 # silence the pyflakes syntax checker
 assert __version__ or True

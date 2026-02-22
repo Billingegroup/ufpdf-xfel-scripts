@@ -6,3 +6,6 @@ mater
 
 ;; Frobenius norm used in np.linalg.norm
 fro
+
+;; fom abbreviation for figure of merit
+fom
