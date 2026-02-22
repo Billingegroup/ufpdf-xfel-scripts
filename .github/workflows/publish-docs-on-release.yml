@@ -7,6 +7,6 @@ jobs:
   docs:
     uses: Billingegroup/release-scripts/.github/workflows/_publish-docs-on-release.yml@v0
     with:
-      project: bglk_euxfel
+      project: ufpdf_xfel_scripts
       c_extension: false
       headless: false

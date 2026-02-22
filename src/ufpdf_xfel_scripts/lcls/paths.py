@@ -1,0 +1,32 @@
+from pathlib import Path
+
+experiment_symlink = "data-202601"
+experiment_number = "mfxl1044925"
+
+experiment_dir = (
+    Path(__file__).parent
+    / ".."
+    / ".."
+    / ".."
+    / ".."
+    / ".."
+    / experiment_symlink
+    / experiment_number
+)
+synchrotron_data_dir = (
+    Path(__file__).parent / ".." / ".." / "data" / "synchrotron-data"
+)
+experiment_dir = experiment_dir.resolve()
+setup_data_dir = experiment_dir / "scratch" / "setup-data"
+
+experiment_data_dir = experiment_dir / "results" / "hf"
+
+
+def main():
+    print(experiment_dir)
+    print(synchrotron_data_dir)
+    print(experiment_data_dir)
+
+
+if __name__ == "__main__":
+    main()

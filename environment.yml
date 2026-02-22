@@ -1,4 +1,4 @@
-name: bglk_euxfel
+name: ufpdf_xfel_scripts
 channels:
   - conda-forge
 dependencies:
