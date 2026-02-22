@@ -40,10 +40,10 @@ Scripts and code for XFEL experiments to do ultrafast PDF measurements
 
 Analysis scripts for assessing ultrafast pump probe powder diffraction and PDF measurements.
 
-Code for assessing figures of merit from ultrafast pump-probed data from the EuXFEL.  This was first written
-for the experiment in March 2025
+Code for assessing figures of merit from ultrafast pump-probed data from the EuXFEL and LCLS.  This was first written
+for the experiment in March 2025 (EuXFEL) and February 2026 (LCLS)
 
-We are working on a cli but there are also Jupyter scripts in `src/bglk_euxfel/scripts`
+We are working on a cli but there are also Jupyter scripts in `src/bglk_lcls/morph_LCLS_pyfai.ipynb` `src/bglk_euxfel/scripts`
 Functions are in `src/bglk_euxfel/functions.py` and plotters in `src/bglk_euxfel/plotters.py`
 
 to use the CLI please use the installation instructions below.
@@ -75,7 +75,7 @@ To add "conda-forge" to the conda channels, run the following in a terminal. ::
 We want to install our packages in a suitable conda environment.
 The following creates and activates a new environment named ``bglk-euxfel_env`` ::
 
-        conda create -n bglk-euxfel_env bglk-euxfel
+        conda create -n bglk-euxfel_env bglk-euxfel python=3.13
         conda activate bglk-euxfel_env
 
 The output should print the latest version displayed on the badges above.
@@ -100,7 +100,6 @@ You can also type the following command to verify the installation. ::
 
         python -c "import bglk_euxfel; print(bglk_euxfel.__version__)"
 
-
 To view the basic usage and available commands, type ::
 
         bglk-euxfel -h
@@ -122,19 +121,61 @@ One time setup:
 
 1. clone the repository or download and unzip the code.
 2. move to the top level folder of the repository. It will be called `bglk_euxfel` and contain the `pyproject.toml` file
-3. create a python 3.11 conda environment that you will work in, e.g.,
-   `conda create -n bglk_euxfel python=3.11`
-4. activate the environment
-   `conda activate bglk_euxfel`
-5. install all the dependencies
-   `conda install --file requirements/conda.txt`
-   `pip install `
-6. install diffpy.morph
-   `pip install -r requirements/pip.txt`
-7. if you will be uploading any code edits and making push requests to the repository install and do some more things
-   `conda install pre-commit` then type
-   `pre-commit install`
-8. Make the `bgkl_eurfel` environment to be available as a kernel in jupyter. Type `python -m ipykernel install --user --name=euxfel-mar25`
+3. create a python 3.13 conda environment that you will work in, e.g.,::
+
+        conda create -n bglk_lcls python=3.13
+
+4. activate the environment::
+
+        conda activate bglk_lcls
+
+5. install all the dependencies::
+
+        conda install --file requirements/conda.txt
+        pip install .
+
+6. You also need to pip install PDFGetX from the .whl that you can find in `mfxl1044925/scratch/PDFGetX`, this requires
+first setting up a symbolic link from your home directory to the proposal data directory in the LCLS S3DF:
+    1. Create a working folder in your S3DF home directory using the New Folder on the homepage and name it something
+    distinguishable (e.g., /mfx_ions/)
+    2. Move into that directory::
+
+        cd /mfx_ions/
+
+    3. Create a symbolic link to the proposal folder, you will change the rest of the second directory in this command,
+    but keep /mfxl1044925 at the end::
+
+        ln -s /sdf/data/lcls/ds/mfx/mfxl1044925 /sdf/home/l/lkitsu/mfx_ions/mfxl1044925
+
+7. if you will be uploading any code edits and making push requests to the repository install and do some more things::
+
+        conda install pre-commit
+        pre-commit install
+
+8. Make the `bgkl_lcls` environment to be available as a kernel in jupyter::
+
+        python -m ipykernel install --user --name=bgkl_lcls
+
+For LCLS:
+
+In order to set up the environment in your S3DF account follow these steps:
+1.  Open an interactive terminal session: S3DF Main Page -> Open in Terminal (drop-down, not just the open terminal
+    button directory) -> (select) PSAna Interactive -> There will be some security-related prompt, just reply ‘yes'
+2.  In the PSAna interactive session, create the conda environment with required packages following the procedure
+    explained above
+
+To run the code in S3DF:
+
+1. log in to your computer and start a Jupyter notebook
+2. open the jupyter notebook under bgkl_lcls
+3. edit any user-settable parameters in the second cell, such as the run number you want to work on, the q-range you
+want to use for the normalization and the q-range you want to compute the figure of merit over.
+4. Change the path to the input data folder as well as check the other paths in case yours are different.
+4. run the notebook. The safest way to do it is using the double-chevron that restarts the kernel and runs all the cels
+5. Good luck!
+
+
+For EuXFEL:
 
 Testing your installation by running the example in this repo
 
