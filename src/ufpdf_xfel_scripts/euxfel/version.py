@@ -21,6 +21,6 @@
 from importlib.metadata import PackageNotFoundError, version
 
 try:
-    __version__ = version("bglk_euxfel")
+    __version__ = version("ufpdf_xfel_scripts")
 except PackageNotFoundError:
     __version__ = "unknown"

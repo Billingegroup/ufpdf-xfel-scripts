@@ -20,7 +20,7 @@ from pathlib import Path
 
 # Attempt to import the version dynamically from GitHub tag.
 try:
-    fullversion = version("bglk_euxfel")
+    fullversion = version("ufpdf_xfel_scripts")
 except Exception:
     fullversion = "No version found. The correct version will appear in the released version."  # noqa: E501
 
