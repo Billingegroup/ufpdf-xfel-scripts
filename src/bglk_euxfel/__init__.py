@@ -12,7 +12,8 @@
 # See LICENSE.rst for license information.
 #
 ##############################################################################
-"""Scripts and code for XFEL experiments to do ultrafast PDF measurements."""
+"""Scripts and code for XFEL experiments to do ultrafast PDF
+measurements."""
 
 # package version
 from bglk_euxfel.version import __version__  # noqa
