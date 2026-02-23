@@ -218,6 +218,21 @@ class Run:
         ]
         return delay_dict
 
+    def _build_parameters_dict(
+        self,
+        parameter_dict,
+        delay_time,
+        morph_parameters_on,
+        morph_parameters_off,
+    ):
+        """Append one delay entry (mirrors the notebook's
+        build_delay_dict)."""
+        parameter_dict[delay_time] = [
+            morph_parameters_on,
+            morph_parameters_off,
+        ]
+        return parameter_dict
+
     def _cleanup(self):
         del self._Is_raw
 
@@ -292,6 +307,7 @@ class Run:
         target_table = np.column_stack([target[0], target[1]])
 
         self.morph_delays = {}
+        self.morph_parameters = {}
         for delay_t, data in self.raw_delays.items():
             x = data[0]
             y_on = data[1]
@@ -301,24 +317,28 @@ class Run:
             morph_off_table = np.column_stack([x, y_off])
 
             # fit morph parameters
-            info_on, _ = morph_arrays(morph_on_table, target_table, **params)
-            info_off, _ = morph_arrays(morph_off_table, target_table, **params)
+            self.morph_parameters_on, _ = morph_arrays(
+                morph_on_table, target_table, **params
+            )
+            self.morph_parameters_off, _ = morph_arrays(
+                morph_off_table, target_table, **params
+            )
 
             # apply parameters without refining
             _, table_on_full = morph_arrays(
                 morph_on_table,
                 target_table,
-                scale=info_on.get("scale"),
-                stretch=info_on.get("stretch"),
-                smear=info_on.get("smear"),
+                scale=self.morph_parameters_on.get("scale"),
+                stretch=self.morph_parameters_on.get("stretch"),
+                smear=self.morph_parameters_on.get("smear"),
                 apply=True,
             )
             _, table_off_full = morph_arrays(
                 morph_off_table,
                 target_table,
-                scale=info_off.get("scale"),
-                stretch=info_off.get("stretch"),
-                smear=info_off.get("smear"),
+                scale=self.morph_parameters_off.get("scale"),
+                stretch=self.morph_parameters_off.get("stretch"),
+                smear=self.morph_parameters_off.get("smear"),
                 apply=True,
             )
 
@@ -327,4 +347,10 @@ class Run:
 
             self.morph_delays = self._build_delay_dict(
                 self.morph_delays, delay_t, x, on_morph, off_morph
+            )
+            self.morph_parameters = self._build_parameters_dict(
+                self.morph_parameters,
+                delay_t,
+                self.morph_parameters_on,
+                self.morph_parameters_off,
             )
