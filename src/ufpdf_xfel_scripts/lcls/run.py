@@ -25,6 +25,11 @@ logging.getLogger("diffpy.pdfgetx.user").setLevel(logging.ERROR)
 logging.getLogger().setLevel(logging.ERROR)
 
 
+def find_nearest(array, value):
+    array = np.asarray(array)
+    return (np.abs(array - value)).argmin()
+
+
 class Run:
     """Loads and reduces a single LCLS pump-probe run.
 
@@ -106,6 +111,7 @@ class Run:
         sample_composition,
         instrument,
         experiment_number,
+        number_of_static_samples=11,
         target_id=0,
         q_min=9,
         q_max=9.5,
@@ -126,6 +132,7 @@ class Run:
         self.sample_composition = sample_composition
         self.instrument = instrument
         self.experiment_number = experiment_number
+        self.number_of_static_samples = number_of_static_samples
         self.verbose = verbose
 
         # --- store setup parameters ---
@@ -152,11 +159,6 @@ class Run:
     # ------------------------------------------------------------------
     # private helpers
     # ------------------------------------------------------------------
-
-    @staticmethod
-    def _find_nearest(array, value):
-        array = np.asarray(array)
-        return (np.abs(array - value)).argmin()
 
     @staticmethod
     def _sample_evenly(arr, n_points):
@@ -276,7 +278,9 @@ class Run:
         """Build raw_delays dict (unorphed) from the reduced arrays."""
 
         if not self.delay_scan:
-            self.subsample = self._sample_evenly(self.delays, 11)
+            self.subsample = self._sample_evenly(
+                self.delays, self.number_of_static_samples
+            )
         else:
             self.subsample = self._average_equal_times()
 
