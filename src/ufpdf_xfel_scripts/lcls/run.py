@@ -196,8 +196,8 @@ class Run:
         diff = on - off
         q_min, q_max = self.q_min, self.q_max
 
-        qmin_idx = self._find_nearest(q, q_min) if q_min is not None else 0
-        qmax_idx = self._find_nearest(q, q_max) if q_max is not None else -1
+        qmin_idx = find_nearest(q, q_min) if q_min is not None else 0
+        qmax_idx = find_nearest(q, q_max) if q_max is not None else -1
 
         l1_diff = np.sum(np.abs(diff[qmin_idx:qmax_idx]))
         l2_diff = np.sum(diff[qmin_idx:qmax_idx] ** 2)
