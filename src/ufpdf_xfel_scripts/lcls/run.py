@@ -75,9 +75,9 @@ class Run:
         Q-grid (1-D, shape (n_q,)).
     delays : np.ndarray
         Sorted unique delay times in ps (1-D, shape (n_delays,)).
-    Iqs_on : np.ndarray
+    Is_on : np.ndarray
         Delay-averaged, sorted pump-ON I(Q) (shape (n_delays, n_q)).
-    Iqs_off : np.ndarray
+    Is_off : np.ndarray
         Delay-averaged, sorted pump-OFF I(Q) (shape (n_delays, n_q)).
     target_delay : float
         The delay value used as the morph target.
@@ -166,37 +166,27 @@ class Run:
 
     def _average_equal_times(self):
         # average repeated delays
-        unique_delays = np.unique(self.delays)
+        self.unique_delays = np.unique(self.delays)
 
-        Iqs_avg_on = []
-        Iqs_avg_off = []
-        for ud in unique_delays:
+        Is_avg_on = []
+        Is_avg_off = []
+        for ud in self.unique_delays:
             mask_on = (self.delays == ud) & self.laser_mask
             mask_off = (self.delays == ud) & ~self.laser_mask
-            Iqs_avg_on.append(np.nanmean(self.Iqs_raw[mask_on], axis=0))
-            Iqs_avg_off.append(np.nanmean(self.Iqs_raw[mask_off], axis=0))
+            Is_avg_on.append(np.nanmean(self._Is_raw[mask_on], axis=0))
+            Is_avg_off.append(np.nanmean(self._Is_raw[mask_off], axis=0))
 
-        self.Iqs_avg_on = np.array(Iqs_avg_on)
-        self.Iqs_avg_off = np.array(Iqs_avg_off)
+        self.Is_avg_on = np.array(Is_avg_on)
+        self.Is_avg_off = np.array(Is_avg_off)
         self.raw_delays = {}
-        for i, step in enumerate(self.delays):
-            self.raw_delays = self._build_delay_dict(
+        for i, step in enumerate(self.unique_delays):
+            self.delay_dict = self._build_delay_dict(
                 self.raw_delays,
                 step,
-                self.qs,
-                self.Iqs_on[i],
-                self.Iqs_off[i],
+                self.q,
+                self.Is_avg_on[i],
+                self.Is_avg_off[i],
             )
-
-        # compute time_away_t0 index
-        if self.points_away_t0_plot_on_off is not None:
-            t0_index = self._find_nearest(self.delays, 0)
-            idx = t0_index + self.points_away_t0_plot_on_off
-            self.time_away_t0 = self.delays[idx]
-        else:
-            self.time_away_t0 = None
-
-        return
 
     def _build_delay_dict(self, delay_dict, delay_time, q, on, off):
         """Append one delay entry (mirrors the notebook's
@@ -227,7 +217,7 @@ class Run:
         return delay_dict
 
     def _cleanup(self):
-        del self.Iqs_raw
+        del self._Is_raw
 
     # ------------------------------------------------------------------
     # pipeline steps
@@ -261,8 +251,10 @@ class Run:
             )  # true if scan exists in the dataset, false otherwise
             if self.delay_scan:
                 delays = f["scan"]["lxt_ttc"][:].squeeze() * 1e12
+                self.target_delay = delays[self.target_id]
             else:
                 delays = None  # filled below
+                self.target_delay = None
 
             laser_mask = f["lightStatus"]["laser"][:].astype(bool)
             xray_mask = f["lightStatus"]["xray"][:].astype(bool)
@@ -273,7 +265,8 @@ class Run:
             print("delay_scan:", self.delay_scan)
 
         # separate x-ray darks and lights
-        self.Is = Is_raw[xray_mask].copy()
+        self.q = qs[0]
+        self._Is_raw = Is_raw[xray_mask].copy()
         self.darks = Is_raw[~xray_mask].copy()
         self.delays = delays[xray_mask].copy()
         self.laser_mask = laser_mask[xray_mask].copy()
