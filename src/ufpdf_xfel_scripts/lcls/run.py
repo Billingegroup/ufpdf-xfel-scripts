@@ -35,38 +35,39 @@ class Run:
     background_number : int
         The background run number (e.g. 1).
     sample_name : str
-        Short sample label used in file names (e.g. 'NSPSe').
+        The hort sample label used in file names (e.g. 'NSPSe').
     sample_composition : str
-        Chemical composition string for PDFGetter (e.g. 'Na11SnPSe12').
+        The chemical composition string for PDFGetter (e.g. 'Na11SnPSe12').
     instrument : str
-        Instrument prefix (e.g. 'mfx').
+        The instrument prefix (e.g. 'mfx').
     experiment_number : str
-        Experiment identifier (e.g. 'l1044925').
+        The experiment identifier (e.g. 'l1044925').
     target_id : int
-        Index of the delay to use as the morph target (default 0).
+        The index of the delay to use as the morph target (default 0).
     q_min : float
-        Lower Q bound for the I(Q) figure of merit (default 9).
+        The lower Q bound for the I(Q) figure of merit (default 9).
     q_max : float
-        Upper Q bound for the I(Q) figure of merit (default 9.5).
+        the upper Q bound for the I(Q) figure of merit (default 9.5).
     r_min_fom : float
-        Lower r bound for the G(r) figure of merit (default 2).
+        The lower r bound for the G(r) figure of merit (default 2).
     r_max_fom : float
-        Upper r bound for the G(r) figure of merit (default 5).
+        The upper r bound for the G(r) figure of merit (default 5).
     q_min_morph : float
-        Lower Q bound for morph normalisation (default 0).
+        the lower Q bound for morph normalisation (default 0).
     q_max_morph : float
-        Upper Q bound for morph normalisation (default 12).
+        The upper Q bound for morph normalisation (default 12).
     scale : float
-        Initial scale parameter for morphing (default 1.01).
+        The initial scale parameter for morphing (default 1.01).
     stretch : float or None
-        Initial stretch parameter for morphing (default None).
+        The initial stretch parameter for morphing (default None).
     smear : float or None
-        Initial smear parameter for morphing (default None).
+        The initial smear parameter for morphing (default None).
     points_away_t0_plot_on_off : int
-        Number of delay points away from t0 to select for on/off
+        The number of delay points away from t0 to select for on/off
         plots (default 0).
     verbose : bool
-        Print diagnostic information during loading (default False).
+        The verbosity for debugging and assessing (default, False, is
+        low verbosity).
 
     Attributes
     ----------
