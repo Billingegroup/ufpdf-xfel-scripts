@@ -161,10 +161,13 @@ class Run:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _sample_evenly(arr, n_points):
-        N = len(arr)
+    def _sample_evenly(intensities, monitor1, monitor2, n_points):
+        N = len(intensities)
         indices = np.linspace(0, N - 1, n_points, dtype=int)
-        return arr[indices]
+        unnormalized = intensities[indices]
+        monitor1_normalized = intensities[indices] / monitor1[indices]
+        monitor2_normalized = intensities[indices] / monitor2[indices]
+        return unnormalized, monitor1_normalized, monitor2_normalized
 
     def _average_equal_times(self):
         # average repeated delays
@@ -172,22 +175,62 @@ class Run:
 
         Is_avg_on = []
         Is_avg_off = []
+        Is_avg_on_mon1 = []
+        Is_avg_off_mon1 = []
+        Is_avg_on_mon2 = []
+        Is_avg_off_mon2 = []
         for ud in self.unique_delays:
             mask_on = (self.delays == ud) & self.laser_mask
             mask_off = (self.delays == ud) & ~self.laser_mask
             Is_avg_on.append(np.nanmean(self._Is_raw[mask_on], axis=0))
             Is_avg_off.append(np.nanmean(self._Is_raw[mask_off], axis=0))
+            Is_avg_on_mon1.append(
+                np.nanmean(
+                    self._Is_raw[mask_on] / self.monitor1[mask_on], axis=0
+                )
+            )
+            Is_avg_off_mon1.append(
+                np.nanmean(
+                    self._Is_raw[mask_off / self.monitor1[mask_off]], axis=0
+                )
+            )
+            Is_avg_on_mon2.append(
+                np.nanmean(
+                    self._Is_raw[mask_on] / self.monitor2[mask_on], axis=0
+                )
+            )
+            Is_avg_off_mon2.append(
+                np.nanmean(
+                    self._Is_raw[mask_off / self.monitor2[mask_off]], axis=0
+                )
+            )
 
-        self.Is_avg_on = np.array(Is_avg_on)
-        self.Is_avg_off = np.array(Is_avg_off)
         self.raw_delays = {}
         for i, step in enumerate(self.unique_delays):
-            self.delay_dict = self._build_delay_dict(
+            self.raw_delay_scans = self._build_delay_dict(
                 self.raw_delays,
                 step,
                 self.q,
                 self.Is_avg_on[i],
                 self.Is_avg_off[i],
+            )
+        self.mon1_normalized_delays = {}
+        for i, step in enumerate(self.unique_delays):
+            self.mon1_delay_scans = self._build_delay_dict(
+                self.mon1_normalized_delays,
+                step,
+                self.q,
+                self.Is_avg_on_mon1[i],
+                self.Is_avg_off_mon1[i],
+            )
+        self.mon2_normalized_delays = {}
+        for i, step in enumerate(self.unique_delays):
+            self.mon2_delay_scans = self._build_delay_dict(
+                self.mon2_normalized_delays,
+                step,
+                self.q,
+                self.Is_avg_on_mon2[i],
+                self.Is_avg_off_mon2[i],
             )
 
     def _build_delay_dict(self, delay_dict, delay_time, q, on, off):
@@ -259,9 +302,11 @@ class Run:
             raise FileNotFoundError(f"HDF5 file not found: {input_path}")
 
         with h5py.File(input_path, "r") as f:
-            qs = f["jungfrau"]["pyfai_q"][:]
-            Is_raw = f["jungfrau"]["pyfai_azav"][:]
+            qs = np.asarray(f["jungfrau"]["pyfai_q"][:])
+            Is_raw = np.asarray(f["jungfrau"]["pyfai_azav"][:])
             Is_raw = np.nanmean(Is_raw, axis=1)
+            monitor1 = np.asarray(f["MfxDg1BmMon/totalInensityJoules"][:])
+            monitor2 = np.asarray(f["MfxDg2BmMon/totalInensityJoules"][:])
 
             self.delay_scan = (
                 "scan" in f
@@ -284,20 +329,23 @@ class Run:
         # separate x-ray darks and lights
         self.q = qs[0]
         self._Is_raw = Is_raw[xray_mask].copy()
+        self.monitor1 = monitor1[xray_mask].copy()
+        self.monitor2 = monitor2[xray_mask].copy()
         self.darks = Is_raw[~xray_mask].copy()
         self.delays = delays[xray_mask].copy()
         self.laser_mask = laser_mask[xray_mask].copy()
         return
 
     def _reduce(self):
-        """Build raw_delays dict (unorphed) from the reduced arrays."""
-
+        """Build raw_delays dict (unmorphed) from the reduced arrays."""
         if not self.delay_scan:
-            self.subsample = self._sample_evenly(
-                self.delays, self.number_of_static_samples
-            )
+            (
+                self.subsample,
+                self.subsample_monitor1,
+                self.subsample_monitor2,
+            ) = self._sample_evenly(self.delays, self.number_of_static_samples)
         else:
-            self.subsample = self._average_equal_times()
+            self._average_equal_times()
 
     def _morph(self):
         """Apply diffpy.morph to each delay and store results in
@@ -317,40 +365,41 @@ class Run:
             morph_off_table = np.column_stack([x, y_off])
 
             # fit morph parameters
-            self.morph_parameters_on, _ = morph_arrays(
+            morph_parameters_on, _ = morph_arrays(
                 morph_on_table, target_table, **params
             )
-            self.morph_parameters_off, _ = morph_arrays(
+            morph_parameters_off, _ = morph_arrays(
                 morph_off_table, target_table, **params
             )
 
-            # apply parameters without refining
+            # apply parameters without refining.  This is a workaround
+            # because of limited range of x that morph returns
             _, table_on_full = morph_arrays(
                 morph_on_table,
                 target_table,
-                scale=self.morph_parameters_on.get("scale"),
-                stretch=self.morph_parameters_on.get("stretch"),
-                smear=self.morph_parameters_on.get("smear"),
+                scale=morph_parameters_on.get("scale"),
+                stretch=morph_parameters_on.get("stretch"),
+                smear=morph_parameters_on.get("smear"),
                 apply=True,
             )
             _, table_off_full = morph_arrays(
                 morph_off_table,
                 target_table,
-                scale=self.morph_parameters_off.get("scale"),
-                stretch=self.morph_parameters_off.get("stretch"),
-                smear=self.morph_parameters_off.get("smear"),
+                scale=morph_parameters_off.get("scale"),
+                stretch=morph_parameters_off.get("stretch"),
+                smear=morph_parameters_off.get("smear"),
                 apply=True,
             )
 
             on_morph = table_on_full[:, 1]
             off_morph = table_off_full[:, 1]
 
-            self.morph_delays = self._build_delay_dict(
-                self.morph_delays, delay_t, x, on_morph, off_morph
+            self.morphed_delay_scans = self._build_delay_dict(
+                self.morphed_delay_scans, delay_t, x, on_morph, off_morph
             )
             self.morph_parameters = self._build_parameters_dict(
                 self.morph_parameters,
                 delay_t,
-                self.morph_parameters_on,
-                self.morph_parameters_off,
+                morph_parameters_on,
+                morph_parameters_off,
             )
