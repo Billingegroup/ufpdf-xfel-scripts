@@ -130,10 +130,10 @@ class Run:
         delay_motor="mfx_lxt_fast2",
         pdfgetter_config=None,
         squeeze_parms=None,
-        fit_qmin=None,
-        fit_qmax=None,
-        pdf_rmin=None,
-        pdf_rmax=None,
+        fit_qmin=0,
+        fit_qmax=12,
+        pdf_rmin=0,
+        pdf_rmax=60,
     ):
         # --- store run-level metadata ---
         self.run_number = run_number
@@ -147,6 +147,7 @@ class Run:
         self.pdfgetter_config = pdfgetter_config
         self.squeeze = squeeze_parms
         self.verbose = verbose
+        self.bad_background_bool = False
 
         # --- store setup parameters ---
         self.target_id = target_id
@@ -171,7 +172,13 @@ class Run:
         self._load()
         self._reduce()
         self._morph()
-        self._transform()
+        try:
+            self._transform()
+        except SystemExit:
+            print(
+                "WARNING: the refinement failed, please re-run using other "
+                "fit_qmax and getter_config"
+            )
         self._cleanup()
 
     # ------------------------------------------------------------------
@@ -292,7 +299,7 @@ class Run:
         morph_table = np.column_stack([x_morph, y_morph])
         target_table = np.column_stack([x_target, y_target])
 
-        self._morphed_fq_parameters, self._morphed_fq = morph_arrays(
+        self.morphed_fq_parameters, self.morphed_fq = morph_arrays(
             morph_table,
             target_table,
             funcxy=(self.pdfgetter_function, self.pdfgetter_config),
@@ -384,7 +391,7 @@ class Run:
     def _cleanup(self):
         del self._Is_raw
 
-    def pdfgetter_function(self, q, y):
+    def pdfgetter_function(self, q, y, **kwargs):
         """Transform input I(Q) to F(Q) using PDFGetter with background
         correction.
 
@@ -398,21 +405,26 @@ class Run:
         cfg.qmaxinst = self.pdfgetter_config.get("qmaxinst", 15.0)
         cfg.dataformat = "QA"
         cfg.mode = "xray"
-
-        # if self.bgscale is not None:
-        #     background_path = background_path
-        #     if background_path.isfile():
-        #         bg_data = load_data(background_path)
-        #         if bg_data.ndim == 2 and bg_data.shape[1] == 2:
-        #             bg_interp = np.interp(x, bg_data[:, 0], bg_data[:, 1])
-        #         else:
-        #             bg_interp = bg_data  # already on same grid
-        #         cfg.background = bg_interp
-        #         cfg.bgscale = bgscale
-        #     else:
-        #         print(f"Background file not found: {background_path}")
-        #     cfg.background = None
-        #     cfg.bgscale = bgscale
+        cfg.bgscale = self.pdfgetter_config.get("bgscale")
+        if cfg.bgscale[0] != 0:
+            background_path = experiment_data_dir
+            if background_path.isfile():
+                bg_data = load_data(background_path)
+                if bg_data.ndim == 2 and bg_data.shape[1] == 2:
+                    bg_interp = np.interp(q, bg_data[:, 0], bg_data[:, 1])
+                else:
+                    bg_interp = bg_data  # already on same grid
+                cfg.background = bg_interp
+                cfg.bgscale = cfg.bgscale
+        else:
+            if not self.bad_background_bool:
+                print(
+                    """WARNING: no background subtraction carried out,
+                set bgscale in pdfgetter_config to a non zero value to carry
+                out background subtraction"""
+                )
+                self.bad_background_bool = True
+            cfg.background = None
 
         # Run PDFGetter
         pg = PDFGetter(cfg)
@@ -553,8 +565,9 @@ class Run:
         morph_delays."""
         self.fq_delay_scans = {}
         self.gr_delay_scans = {}
+        self._morph_fq()
 
-        for delay_t in self.delays:
+        for delay_t in self.morphed_delay_scans:
             q_iq = self.morphed_delay_scans[delay_t][0]
             on_iq = self.morphed_delay_scans[delay_t][1]
             off_iq = self.morphed_delay_scans[delay_t][2]
