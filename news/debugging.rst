@@ -1,5 +1,6 @@
 **Added:**
 
+* script: debugging and fixed SystemExit Error
 * No news added:
 
 **Changed:**
