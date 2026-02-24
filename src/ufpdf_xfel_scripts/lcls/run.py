@@ -124,6 +124,7 @@ class Run:
         smear=None,
         points_away_t0_plot_on_off=0,
         verbose=False,
+        delay_motor="mfx_lxt_fast2",
     ):
         # --- store run-level metadata ---
         self.run_number = run_number
@@ -133,6 +134,7 @@ class Run:
         self.instrument = instrument
         self.experiment_number = experiment_number
         self.number_of_static_samples = number_of_static_samples
+        self.delay_motor = delay_motor
         self.verbose = verbose
 
         # --- store setup parameters ---
@@ -186,22 +188,30 @@ class Run:
             Is_avg_off.append(np.nanmean(self._Is_raw[mask_off], axis=0))
             Is_avg_on_mon1.append(
                 np.nanmean(
-                    self._Is_raw[mask_on] / self.monitor1[mask_on], axis=0
+                    self._Is_raw[mask_on]
+                    / self.monitor1[mask_on].reshape(-1, 1),
+                    axis=0,
                 )
             )
             Is_avg_off_mon1.append(
                 np.nanmean(
-                    self._Is_raw[mask_off / self.monitor1[mask_off]], axis=0
+                    self._Is_raw[mask_off]
+                    / self.monitor1[mask_off].reshape(-1, 1),
+                    axis=0,
                 )
             )
             Is_avg_on_mon2.append(
                 np.nanmean(
-                    self._Is_raw[mask_on] / self.monitor2[mask_on], axis=0
+                    self._Is_raw[mask_on]
+                    / self.monitor2[mask_on].reshape(-1, 1),
+                    axis=0,
                 )
             )
             Is_avg_off_mon2.append(
                 np.nanmean(
-                    self._Is_raw[mask_off / self.monitor2[mask_off]], axis=0
+                    self._Is_raw[mask_off]
+                    / self.monitor2[mask_off].reshape(-1, 1),
+                    axis=0,
                 )
             )
 
@@ -211,26 +221,26 @@ class Run:
                 self.raw_delays,
                 step,
                 self.q,
-                self.Is_avg_on[i],
-                self.Is_avg_off[i],
+                Is_avg_on[i],
+                Is_avg_off[i],
             )
-        self.mon1_normalized_delays = {}
+        self.mon1_normalized_delay_scans = {}
         for i, step in enumerate(self.unique_delays):
-            self.mon1_delay_scans = self._build_delay_dict(
-                self.mon1_normalized_delays,
+            self.mon1_normalized_delay_scans = self._build_delay_dict(
+                self.mon1_normalized_delay_scans,
                 step,
                 self.q,
-                self.Is_avg_on_mon1[i],
-                self.Is_avg_off_mon1[i],
+                Is_avg_on_mon1[i],
+                Is_avg_off_mon1[i],
             )
-        self.mon2_normalized_delays = {}
+        self.mon2_normalized_delay_scans = {}
         for i, step in enumerate(self.unique_delays):
-            self.mon2_delay_scans = self._build_delay_dict(
-                self.mon2_normalized_delays,
+            self.mon2_normalized_delay_scans = self._build_delay_dict(
+                self.mon2_normalized_delay_scans,
                 step,
                 self.q,
-                self.Is_avg_on_mon2[i],
-                self.Is_avg_off_mon2[i],
+                Is_avg_on_mon2[i],
+                Is_avg_off_mon2[i],
             )
 
     def _build_delay_dict(self, delay_dict, delay_time, q, on, off):
@@ -305,14 +315,14 @@ class Run:
             qs = np.asarray(f["jungfrau"]["pyfai_q"][:])
             Is_raw = np.asarray(f["jungfrau"]["pyfai_azav"][:])
             Is_raw = np.nanmean(Is_raw, axis=1)
-            monitor1 = np.asarray(f["MfxDg1BmMon/totalInensityJoules"][:])
-            monitor2 = np.asarray(f["MfxDg2BmMon/totalInensityJoules"][:])
+            monitor1 = np.asarray(f["MfxDg1BmMon/totalIntensityJoules"][:])
+            monitor2 = np.asarray(f["MfxDg2BmMon/totalIntensityJoules"][:])
 
             self.delay_scan = (
                 "scan" in f
             )  # true if scan exists in the dataset, false otherwise
             if self.delay_scan:
-                delays = f["scan"]["lxt_ttc"][:].squeeze() * 1e12
+                delays = f["scan"][self.delay_motor][:].squeeze() * 1e12
                 self.target_delay = delays[self.target_id]
             else:
                 delays = None  # filled below
@@ -354,8 +364,8 @@ class Run:
         target = self.raw_delays[self.target_delay]
         target_table = np.column_stack([target[0], target[1]])
 
-        self.morph_delays = {}
         self.morph_parameters = {}
+        self.morphed_delay_scans = {}
         for delay_t, data in self.raw_delays.items():
             x = data[0]
             y_on = data[1]
@@ -397,6 +407,7 @@ class Run:
             self.morphed_delay_scans = self._build_delay_dict(
                 self.morphed_delay_scans, delay_t, x, on_morph, off_morph
             )
+
             self.morph_parameters = self._build_parameters_dict(
                 self.morph_parameters,
                 delay_t,
