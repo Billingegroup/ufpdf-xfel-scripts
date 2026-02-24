@@ -12,8 +12,11 @@ import warnings
 import h5py
 import numpy as np
 from diffpy.morph.morphpy import morph_arrays
+from diffpy.pdfgetx.pdfconfig import PDFConfig
+from diffpy.pdfgetx.pdfgetter import PDFGetter
 from diffpy.utils.parsers import load_data
 
+# from src.ufpdf_xfel_scripts.lcls.scripts.morph_LCLS import squeeze
 from ufpdf_xfel_scripts.lcls.paths import (
     experiment_data_dir,
     synchrotron_data_dir,
@@ -125,6 +128,12 @@ class Run:
         points_away_t0_plot_on_off=0,
         verbose=False,
         delay_motor="mfx_lxt_fast2",
+        pdfgetter_config=None,
+        squeeze_parms=None,
+        fit_qmin=None,
+        fit_qmax=None,
+        pdf_rmin=None,
+        pdf_rmax=None,
     ):
         # --- store run-level metadata ---
         self.run_number = run_number
@@ -135,12 +144,18 @@ class Run:
         self.experiment_number = experiment_number
         self.number_of_static_samples = number_of_static_samples
         self.delay_motor = delay_motor
+        self.pdfgetter_config = pdfgetter_config
+        self.squeeze = squeeze_parms
         self.verbose = verbose
 
         # --- store setup parameters ---
         self.target_id = target_id
         self.q_min = q_min
         self.q_max = q_max
+        self.pdf_rmin = pdf_rmin
+        self.pdf_rmax = pdf_rmax
+        self.fit_qmin = fit_qmin
+        self.fit_qmax = fit_qmax
         self.r_min_fom = r_min_fom
         self.r_max_fom = r_max_fom
         self.morph_params = {
@@ -156,6 +171,7 @@ class Run:
         self._load()
         self._reduce()
         self._morph()
+        self._morph_fq()
         self._cleanup()
 
     # ------------------------------------------------------------------
@@ -170,6 +186,28 @@ class Run:
         monitor1_normalized = intensities[indices] / monitor1[indices]
         monitor2_normalized = intensities[indices] / monitor2[indices]
         return unnormalized, monitor1_normalized, monitor2_normalized
+
+    def compute_gr(self, q, fq):
+        """FT by hand to preserve the morph squeezes.
+
+        Can't use the raw output from pdfGetter for this reason.
+
+        Parameters
+        ----------
+        q
+        fq
+        r_min
+        r_max
+        npoints
+
+        Returns
+        -------
+        """
+        r = np.arange(self.pdf_rmin, self.pdf_rmax, 0.01)
+        qr = np.outer(q, r)
+        integrand = fq[:, None] * np.sin(qr)
+        gr = (2 / np.pi) * np.trapezoid(integrand, q, axis=0)
+        return r, gr
 
     def _average_equal_times(self):
         # average repeated delays
@@ -243,6 +281,27 @@ class Run:
                 Is_avg_off_mon2[i],
             )
 
+    def _morph_fq(self):
+        reference_delay = self.delays[self.target_id]
+
+        x_morph = self.morphed_delay_scans[reference_delay][0]
+        y_morph = self.morphed_delay_scans[reference_delay][2]
+        x_target = self.q_synchrotron
+        y_target = self.fq_synchrotron
+
+        morph_table = np.column_stack([x_morph, y_morph])
+        target_table = np.column_stack([x_target, y_target])
+
+        self.morphed_fq_parameters, self.morphed_fq = morph_arrays(
+            morph_table,
+            target_table,
+            funcxy=(self.pdfgetter_function, self.pdfgetter_config),
+            scale=1,
+            squeeze=self.squeeze,
+            xmin=self.fit_qmin,
+            xmax=self.fit_qmax,
+        )
+
     def _build_delay_dict(self, delay_dict, delay_time, q, on, off):
         """Append one delay entry (mirrors the notebook's
         build_delay_dict)."""
@@ -286,8 +345,117 @@ class Run:
         ]
         return parameter_dict
 
+    def _build_gr_delay_dict(self):
+        gr_delay_dict = {}
+
+        for delay_t in self.delays:
+            q_iq = self.morphed_delay_scans[delay_t][0]
+            on_iq = self.morphed_delay_scans[delay_t][1]
+            off_iq = self.morphed_delay_scans[delay_t][2]
+
+            table_on = np.column_stack([q_iq, on_iq])
+            table_off = np.column_stack([q_iq, off_iq])
+
+            target_dummy = table_on  # only to preserve grid
+
+            _, fq_on = morph_arrays(
+                table_on,
+                target_dummy,
+                funcxy=(
+                    self.pdfgetter_function,
+                    self.morphed_fq_parameters["funcxy"],
+                ),
+                scale=float(self.morphed_fq_parameters["scale"]),
+                squeeze=[
+                    float(v)
+                    for v in self.morphed_fq_parameters["squeeze"].values()
+                ],
+                xmin=self.fit_qmin,
+                xmax=self.fit_qmax,
+                apply=True,
+            )
+
+            _, fq_off = morph_arrays(
+                table_off,
+                target_dummy,
+                funcxy=(
+                    self.pdfgetter_function,
+                    self.morphed_fq_parameters["funcxy"],
+                ),
+                scale=float(self.morphed_fq_parameters["scale"]),
+                squeeze=[
+                    float(v)
+                    for v in self.morphed_fq_parameters["squeeze"].values()
+                ],
+                xmin=self.fit_qmin,
+                xmax=self.fit_qmax,
+                apply=True,
+            )
+
+            q_final = fq_on[:, 0]
+            fq_on = fq_on[:, 1]
+            fq_off = fq_off[:, 1]
+
+            r, gr_on = self.compute_gr(q_final, fq_on)
+            r, gr_off = self.compute_gr(q_final, fq_off)
+
+            diff = gr_on - gr_off
+
+            rmin_idx = np.abs(r - self.r_min_fom).argmin()
+            rmax_idx = np.abs(r - self.r_max_fom).argmin()
+
+            gr_delay_dict[delay_t] = {
+                "r": r,
+                "gr_on": gr_on,
+                "gr_off": gr_off,
+                "diff_gr": diff,
+                "RMS": np.sqrt(np.sum(diff[rmin_idx:rmax_idx] ** 2)),
+                "diff_int": np.sum(diff[rmin_idx:rmax_idx]),
+                "sum_gr_on": np.sum(gr_on[rmin_idx:rmax_idx]),
+                "sum_gr_off": np.sum(gr_off[rmin_idx:rmax_idx]),
+            }
+        return gr_delay_dict
+
     def _cleanup(self):
         del self._Is_raw
+
+    def pdfgetter_function(self, q, y, rpoly, qmin, bgscale=None):
+        """Transform input I(Q) to F(Q) using PDFGetter with background
+        correction.
+
+        Returns (x, F(Q)).
+        """
+        cfg = PDFConfig()
+        cfg.composition = self.sample_composition
+        cfg.rpoly = self.pdfgetter_config.get("rpoly", 0.9)
+        cfg.qmin = self.pdfgetter_config.get("qmin", 0.5)
+        cfg.qmax = self.pdfgetter_config.get("qmax", 15.0)
+        cfg.qmaxinst = self.pdfgetter_config.get("qmaxinst", 15.0)
+        cfg.dataformat = "QA"
+        cfg.mode = "xray"
+
+        # if self.bgscale is not None:
+        #     background_path = background_path
+        #     if background_path.isfile():
+        #         bg_data = load_data(background_path)
+        #         if bg_data.ndim == 2 and bg_data.shape[1] == 2:
+        #             bg_interp = np.interp(x, bg_data[:, 0], bg_data[:, 1])
+        #         else:
+        #             bg_interp = bg_data  # already on same grid
+        #         cfg.background = bg_interp
+        #         cfg.bgscale = bgscale
+        #     else:
+        #         print(f"Background file not found: {background_path}")
+        #     cfg.background = None
+        #     cfg.bgscale = bgscale
+
+        # Run PDFGetter
+        pg = PDFGetter(cfg)
+        _, _ = pg(x=q, y=y)
+        q_out, fq_out = pg.fq
+
+        fq_interp = np.interp(q, q_out, fq_out)
+        return q, fq_interp
 
     # ------------------------------------------------------------------
     # pipeline steps
