@@ -171,7 +171,7 @@ class Run:
         self._load()
         self._reduce()
         self._morph()
-        self._morph_fq()
+        self._transform()
         self._cleanup()
 
     # ------------------------------------------------------------------
@@ -292,7 +292,7 @@ class Run:
         morph_table = np.column_stack([x_morph, y_morph])
         target_table = np.column_stack([x_target, y_target])
 
-        self.morphed_fq_parameters, self.morphed_fq = morph_arrays(
+        self._morphed_fq_parameters, self._morphed_fq = morph_arrays(
             morph_table,
             target_table,
             funcxy=(self.pdfgetter_function, self.pdfgetter_config),
@@ -301,13 +301,13 @@ class Run:
             xmin=self.fit_qmin,
             xmax=self.fit_qmax,
         )
+        return
 
     def _build_delay_dict(self, delay_dict, delay_time, q, on, off):
         """Append one delay entry (mirrors the notebook's
         build_delay_dict)."""
         diff = on - off
         q_min, q_max = self.q_min, self.q_max
-
         qmin_idx = find_nearest(q, q_min) if q_min is not None else 0
         qmax_idx = find_nearest(q, q_max) if q_max is not None else -1
 
@@ -345,81 +345,46 @@ class Run:
         ]
         return parameter_dict
 
-    def _build_gr_delay_dict(self):
-        gr_delay_dict = {}
+    def _build_fq_delay_dict(self, fq_delay_dict, delay_t, q, fq_on, fq_off):
+        diff = fq_on - fq_off
+        q_min, q_max = self.q_min, self.q_max
+        qmin_idx = find_nearest(q, q_min) if q_min is not None else 0
+        qmax_idx = find_nearest(q, q_max) if q_max is not None else -1
 
-        for delay_t in self.delays:
-            q_iq = self.morphed_delay_scans[delay_t][0]
-            on_iq = self.morphed_delay_scans[delay_t][1]
-            off_iq = self.morphed_delay_scans[delay_t][2]
+        fq_delay_dict[delay_t] = {
+            "q": q,
+            "fq_on": fq_on,
+            "fq_off": fq_off,
+            "diff_gr": diff,
+            "RMS": np.sqrt(np.sum(diff[qmin_idx:qmax_idx] ** 2)),
+            "diff_int": np.sum(diff[qmin_idx:qmax_idx]),
+            "sum_fq_on": np.sum(fq_on[qmin_idx:qmax_idx]),
+            "sum_fq_off": np.sum(fq_off[qmin_idx:qmax_idx]),
+        }
+        return fq_delay_dict
 
-            table_on = np.column_stack([q_iq, on_iq])
-            table_off = np.column_stack([q_iq, off_iq])
+    def _build_gr_delay_dict(self, gr_delay_dict, delay_t, r, gr_on, gr_off):
+        diff = gr_on - gr_off
+        r_min, r_max = self.pdf_rmin, self.pdf_rmax
+        rmin_idx = find_nearest(r, r_min) if r_min is not None else 0
+        rmax_idx = find_nearest(r, r_max) if r_max is not None else -1
 
-            target_dummy = table_on  # only to preserve grid
-
-            _, fq_on = morph_arrays(
-                table_on,
-                target_dummy,
-                funcxy=(
-                    self.pdfgetter_function,
-                    self.morphed_fq_parameters["funcxy"],
-                ),
-                scale=float(self.morphed_fq_parameters["scale"]),
-                squeeze=[
-                    float(v)
-                    for v in self.morphed_fq_parameters["squeeze"].values()
-                ],
-                xmin=self.fit_qmin,
-                xmax=self.fit_qmax,
-                apply=True,
-            )
-
-            _, fq_off = morph_arrays(
-                table_off,
-                target_dummy,
-                funcxy=(
-                    self.pdfgetter_function,
-                    self.morphed_fq_parameters["funcxy"],
-                ),
-                scale=float(self.morphed_fq_parameters["scale"]),
-                squeeze=[
-                    float(v)
-                    for v in self.morphed_fq_parameters["squeeze"].values()
-                ],
-                xmin=self.fit_qmin,
-                xmax=self.fit_qmax,
-                apply=True,
-            )
-
-            q_final = fq_on[:, 0]
-            fq_on = fq_on[:, 1]
-            fq_off = fq_off[:, 1]
-
-            r, gr_on = self.compute_gr(q_final, fq_on)
-            r, gr_off = self.compute_gr(q_final, fq_off)
-
-            diff = gr_on - gr_off
-
-            rmin_idx = np.abs(r - self.r_min_fom).argmin()
-            rmax_idx = np.abs(r - self.r_max_fom).argmin()
-
-            gr_delay_dict[delay_t] = {
-                "r": r,
-                "gr_on": gr_on,
-                "gr_off": gr_off,
-                "diff_gr": diff,
-                "RMS": np.sqrt(np.sum(diff[rmin_idx:rmax_idx] ** 2)),
-                "diff_int": np.sum(diff[rmin_idx:rmax_idx]),
-                "sum_gr_on": np.sum(gr_on[rmin_idx:rmax_idx]),
-                "sum_gr_off": np.sum(gr_off[rmin_idx:rmax_idx]),
-            }
+        gr_delay_dict[delay_t] = {
+            "r": r,
+            "gr_on": gr_on,
+            "gr_off": gr_off,
+            "diff_gr": diff,
+            "RMS": np.sqrt(np.sum(diff[rmin_idx:rmax_idx] ** 2)),
+            "diff_int": np.sum(diff[rmin_idx:rmax_idx]),
+            "sum_gr_on": np.sum(gr_on[rmin_idx:rmax_idx]),
+            "sum_gr_off": np.sum(gr_off[rmin_idx:rmax_idx]),
+        }
         return gr_delay_dict
 
     def _cleanup(self):
         del self._Is_raw
 
-    def pdfgetter_function(self, q, y, rpoly, qmin, bgscale=None):
+    def pdfgetter_function(self, q, y):
         """Transform input I(Q) to F(Q) using PDFGetter with background
         correction.
 
@@ -582,3 +547,67 @@ class Run:
                 morph_parameters_on,
                 morph_parameters_off,
             )
+
+    def _transform(self):
+        """Apply diffpy.pdfgetx to each delay and store results in
+        morph_delays."""
+        self.fq_delay_scans = {}
+        self.gr_delay_scans = {}
+
+        for delay_t in self.delays:
+            q_iq = self.morphed_delay_scans[delay_t][0]
+            on_iq = self.morphed_delay_scans[delay_t][1]
+            off_iq = self.morphed_delay_scans[delay_t][2]
+
+            table_on = np.column_stack([q_iq, on_iq])
+            table_off = np.column_stack([q_iq, off_iq])
+
+            target_dummy = table_on  # only to preserve grid
+
+            _, fq_on = morph_arrays(
+                table_on,
+                target_dummy,
+                funcxy=(
+                    self.pdfgetter_function,
+                    self.morphed_fq_parameters["funcxy"],
+                ),
+                scale=float(self.morphed_fq_parameters["scale"]),
+                squeeze=[
+                    float(v)
+                    for v in self.morphed_fq_parameters["squeeze"].values()
+                ],
+                xmin=self.fit_qmin,
+                xmax=self.fit_qmax,
+                apply=True,
+            )
+
+            _, fq_off = morph_arrays(
+                table_off,
+                target_dummy,
+                funcxy=(
+                    self.pdfgetter_function,
+                    self.morphed_fq_parameters["funcxy"],
+                ),
+                scale=float(self.morphed_fq_parameters["scale"]),
+                squeeze=[
+                    float(v)
+                    for v in self.morphed_fq_parameters["squeeze"].values()
+                ],
+                xmin=self.fit_qmin,
+                xmax=self.fit_qmax,
+                apply=True,
+            )
+
+            q_final = fq_on[:, 0]
+            fq_on = fq_on[:, 1]
+            fq_off = fq_off[:, 1]
+            self.fq_delay_scans = self._build_fq_delay_dict(
+                self.fq_delay_scans, delay_t, q_final, fq_on, fq_off
+            )
+
+            r, gr_on = self.compute_gr(q_final, fq_on)
+            r, gr_off = self.compute_gr(q_final, fq_off)
+            self.gr_delay_scans = self._build_gr_delay_dict(
+                self.gr_delay_scans, delay_t, r, gr_on, gr_off
+            )
+        return
