@@ -133,7 +133,7 @@ One time setup for LCLS:
 
 If you don't have SSH you can use HTTPS::
 
-        https://github.com/Billingegroup/ufpdf-xfel-scripts.git
+        git clone https://github.com/Billingegroup/ufpdf-xfel-scripts.git
 
 5. this will create a folder inside your dev folder containing all the repository.
 
@@ -154,16 +154,15 @@ If you don't have SSH you can use HTTPS::
 
 10. You also need to pip install PDFGetX from the .whl that you can find in `mfxl1044925/scratch/setup-data/pdfetx`, this requires
 first setting up a symbolic link from your home directory to the proposal data directory in the LCLS S3DF:
-    1. Create a working folder in your S3DF home directory using the New Folder on the homepage and name it something
-    distinguishable (e.g., /mfx_ions/)
+    1. Create a working folder in your S3DF home directory using the New Folder on the homepage and name it data-202601
     2. Move into that directory::
 
-        cd /mfx_ions/
+        cd data-202601
 
     3. Create a symbolic link to the proposal folder, you will change the rest of the second directory in this command,
-    but keep /mfxl1044925 at the end::
+    but keep data-202601/mfxl1044925 at the end::
 
-        ln -s /sdf/data/lcls/ds/mfx/mfxl1044925 /sdf/home/l/lkitsu/mfx_ions/mfxl1044925
+        ln -s /sdf/data/lcls/ds/mfx/mfxl1044925 /sdf/home/l/lkitsu/data-202601/mfxl1044925
 
     4. move to that folder and then move to `mfxl1044925/scratch/setup-data/pdfetx`. Then pip install the wheel::
 
