@@ -117,24 +117,42 @@ To use the Jupyter notebooks, please use the following instructions:
 
 We assume that you have miniconda or conda installed
 
-One time setup:
+One time setup for LCLS:
 
-1. clone the repository or download and unzip the code.
-2. move to the top level folder of the repository. It will be called `ufpdf-xfel-scripts` and contain the `pyproject.toml` file
-3. create a python 3.13 conda environment that you will work in, e.g.,::
+1. log in to your computer S3DF website
+
+2. create a folder on your home directory named dev
+
+3. open a terminal and move to that directory::
+
+        cd dev
+
+4. clone the github repository or download and unzip the code. If you have SSH to you git account setup::
+
+        git clone git@github.com:Billingegroup/ufpdf-xfel-scripts.git
+
+If you don't have SSH you can use HTTPS::
+
+        https://github.com/Billingegroup/ufpdf-xfel-scripts.git
+
+5. this will create a folder inside your dev folder containing all the repository.
+
+6. move to the top level folder of the repository. It will be called `ufpdf-xfel-scripts` and contain the `pyproject.toml` file
+
+7. open a terminal and create a python 3.13 conda environment that you will work in, e.g.,::
 
         conda create -n bglk_lcls python=3.13
 
-4. activate the environment::
+8. activate the environment::
 
         conda activate bglk_lcls
 
-5. install all the dependencies::
+9. install all the dependencies::
 
         conda install --file requirements/conda.txt
         pip install .
 
-6. You also need to pip install PDFGetX from the .whl that you can find in `mfxl1044925/scratch/setup-data/pdfetx`, this requires
+10. You also need to pip install PDFGetX from the .whl that you can find in `mfxl1044925/scratch/setup-data/pdfetx`, this requires
 first setting up a symbolic link from your home directory to the proposal data directory in the LCLS S3DF:
     1. Create a working folder in your S3DF home directory using the New Folder on the homepage and name it something
     distinguishable (e.g., /mfx_ions/)
@@ -151,45 +169,29 @@ first setting up a symbolic link from your home directory to the proposal data d
 
         pip install diffpy_pdfgetx-2.4.0-cp311-cp311-linux_x86_64.whl
 
-7. if you will be uploading any code edits and making push requests to the repository install and do some more things::
+11. if you will be uploading any code edits and making push requests to the repository install and do some more things::
 
         conda install pre-commit
         pre-commit install
 
-8. Make the `bgkl_lcls` environment to be available as a kernel in jupyter::
+12. Make the `bgkl_lcls` environment to be available as a kernel in jupyter::
 
         python -m ipykernel install --user --name=bgkl_lcls
 
-For LCLS:
-
-In order to set up the environment in your S3DF account follow these steps:
-1.  Open an interactive terminal session: S3DF Main Page -> Open in Terminal (drop-down, not just the open terminal
-    button directory) -> (select) PSAna Interactive -> There will be some security-related prompt, just reply ‘yes'
-2.  In the PSAna interactive session, create the conda environment with required packages following the procedure
-    explained above
 
 To run the code in S3DF:
 
-1. log in to your computer and start a Jupyter notebook
-2. create a folder on your home directory named dev
-3. move to that directory from terminal::
+1. log in to your computer S3DF website and start a Jupyter notebook
 
-        cd dev
-
-4. clone the github repository. If you have SSH to you git account setup::
-
-        git clone git@github.com:Billingegroup/ufpdf-xfel-scripts.git
-
-    If you don't have SSH you can use HTTPS::
-
-        https://github.com/Billingegroup/ufpdf-xfel-scripts.git
-
-5. this will create a folder inside your dev folder containing all the repository. To use the jupyter notebook for
+2. To use the jupyter notebook for
 looking at different runs, move to src/ufpdf_xfel_scripts/lcls/scripts/preview_single_run.ipynb and open it
-6. edit any user-settable parameters in the first few cells, such as the run number you want to work on, the q-range you
+
+3. edit any user-settable parameters in the first few cells, such as the run number you want to work on, the q-range you
 want to use for the normalization and the q-range you want to compute the figure of merit over, etc.
-7. run the notebook. The safest way to do it is using the double-chevron that restarts the kernel and runs all the cels
-8. Good luck!
+
+4. run the notebook. The safest way to do it is using the double-chevron that restarts the kernel and runs all the cels
+
+5. Good luck!
 
 
 For EuXFEL:
