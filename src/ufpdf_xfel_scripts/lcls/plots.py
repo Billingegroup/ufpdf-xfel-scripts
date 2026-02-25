@@ -1,8 +1,11 @@
 import matplotlib
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
 from ufpdf_xfel_scripts.lcls.run import find_nearest
+
+mpl.rcParams.update({"text.usetex": False})
 
 
 def compute_gr(q, fq, r_min, r_max, step=0.01):
@@ -427,6 +430,163 @@ def plot_gr_function(
     ax5.legend(frameon=False)
 
     ax0.set_title(f"sample = {sample_name}, run = {run_number}")
+
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_time_resolved_window_map(
+    delay_dict,
+    run,
+    width=0.8,
+    n_centers=200,
+    metric="rms",  # "rms", "l1", "mean", "peak", "var"
+):
+    """Fixed-width sliding window. Produces FOM(center, delay) map.
+
+    Parameters
+    ----------
+    delay_dict : dict
+        Can be:
+            run_object.morphed_delay_scans
+            run_object.fq_delay_scans
+            run_object.gr_delay_scans
+
+    run : run object
+        Used for title only
+
+    width : float
+        Fixed window width
+
+    n_centers : int
+        Number of window centers
+
+    metric : str
+        One of:
+            "rms"   -> sqrt(mean(diff^2))
+            "l1"    -> mean(|diff|)
+            "mean"  -> mean(diff)
+            "peak"  -> max(|diff|)
+            "var"   -> variance(diff)
+    """
+
+    delay_keys = sorted(delay_dict.keys())
+    delay_times = np.array(delay_keys)
+
+    first_entry = delay_dict[delay_keys[0]]
+
+    if isinstance(first_entry, dict):
+
+        # G(r)
+        if "r" in first_entry:
+            axis_vals = first_entry["r"]
+
+            if "diff_gr" in first_entry:
+                diff_matrix = np.array(
+                    [delay_dict[d]["diff_gr"] for d in delay_keys]
+                )
+            else:
+                diff_matrix = np.array(
+                    [
+                        delay_dict[d]["gr_on"] - delay_dict[d]["gr_off"]
+                        for d in delay_keys
+                    ]
+                )
+
+            axis_label = "r [Å]"
+            data_label = "G(r)"
+
+        elif "q" in first_entry:
+            axis_vals = first_entry["q"]
+
+            diff_matrix = np.array(
+                [
+                    delay_dict[d]["fq_on"] - delay_dict[d]["fq_off"]
+                    for d in delay_keys
+                ]
+            )
+
+            axis_label = "Q [1/Å]"
+            data_label = "F(Q)"
+
+        else:
+            raise ValueError("Unknown dictionary structure in delay_dict.")
+
+    # I(q)
+    else:
+        axis_vals = first_entry[0]
+        diff_matrix = np.array([delay_dict[d][3] for d in delay_keys])
+
+        axis_label = "Q [1/Å]"
+        data_label = "I(q)"
+
+    sort_idx = np.argsort(delay_times)
+    delay_times = delay_times[sort_idx]
+    diff_matrix = diff_matrix[sort_idx]
+
+    centers = np.linspace(
+        axis_vals.min(),
+        axis_vals.max(),
+        n_centers,
+    )
+
+    half_w = width / 2.0
+    FOM_map = np.zeros((len(delay_times), len(centers)))
+
+    for i_c, center in enumerate(centers):
+
+        low = center - half_w
+        high = center + half_w
+
+        mask = (axis_vals >= low) & (axis_vals <= high)
+
+        if np.sum(mask) < 3:
+            continue
+
+        window_data = diff_matrix[:, mask]
+
+        if metric == "rms":
+            values = np.sqrt(np.mean(window_data**2, axis=1))
+        elif metric == "l1":
+            values = np.mean(np.abs(window_data), axis=1)
+        elif metric == "mean":
+            values = np.mean(window_data, axis=1)
+        elif metric == "peak":
+            values = np.max(np.abs(window_data), axis=1)
+        elif metric == "var":
+            values = np.var(window_data, axis=1)
+        else:
+            raise ValueError(
+                "metric must be 'rms', 'l1', 'mean', 'peak', or 'var'"
+            )
+
+        FOM_map[:, i_c] = values
+
+    fig, ax = plt.subplots(figsize=(9, 6))
+
+    extent = [
+        centers[0],
+        centers[-1],
+        delay_times[0],
+        delay_times[-1],
+    ]
+
+    im = ax.imshow(
+        FOM_map,
+        aspect="auto",
+        extent=extent,
+        origin="lower",
+        cmap="viridis",
+    )
+
+    ax.set_xlabel(axis_label)
+    ax.set_ylabel("Delay (ps)")
+    ax.set_title(
+        f"{data_label} time-resolved window map\n"
+        f"metric={metric}, width={width}, run={run.run_number}"
+    )
+
+    plt.colorbar(im, ax=ax, label=metric)
 
     plt.tight_layout()
     plt.show()
