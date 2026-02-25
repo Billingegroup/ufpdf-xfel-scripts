@@ -1,11 +1,11 @@
 |Icon| |title|_
 ===============
 
-.. |title| replace:: bglk-euxfel
-.. _title: https://billingegroup.github.io/bglk-euxfel
+.. |title| replace:: ufpf_xfel_scripts
+.. _title: https://billingegroup.github.io/ufpf-xfel-scripts
 
 .. |Icon| image:: https://avatars.githubusercontent.com/billingegroup
-        :target: https://billingegroup.github.io/bglk-euxfel
+        :target: https://billingegroup.github.io/ufpf-xfel-scripts
         :height: 100px
 
 |PyPI| |Forge| |PythonVersion| |PR|
@@ -15,26 +15,26 @@
 .. |Black| image:: https://img.shields.io/badge/code_style-black-black
         :target: https://github.com/psf/black
 
-.. |CI| image:: https://github.com/billingegroup/bglk-euxfel/actions/workflows/matrix-and-codecov-on-merge-to-main.yml/badge.svg
-        :target: https://github.com/billingegroup/bglk-euxfel/actions/workflows/matrix-and-codecov-on-merge-to-main.yml
+.. |CI| image:: https://github.com/billingegroup/ufpf-xfel-scripts/actions/workflows/matrix-and-codecov-on-merge-to-main.yml/badge.svg
+        :target: https://github.com/billingegroup/ufpf-xfel-scripts/actions/workflows/matrix-and-codecov-on-merge-to-main.yml
 
-.. |Codecov| image:: https://codecov.io/gh/billingegroup/bglk-euxfel/branch/main/graph/badge.svg
-        :target: https://codecov.io/gh/billingegroup/bglk-euxfel
+.. |Codecov| image:: https://codecov.io/gh/billingegroup/ufpf_xfel_scripts/branch/main/graph/badge.svg
+        :target: https://codecov.io/gh/billingegroup/ufpf-xfel-scripts
 
-.. |Forge| image:: https://img.shields.io/conda/vn/conda-forge/bglk-euxfel
-        :target: https://anaconda.org/conda-forge/bglk-euxfel
+.. |Forge| image:: https://img.shields.io/conda/vn/conda-forge/ufpf_xfel_scripts
+        :target: https://anaconda.org/conda-forge/ufpf-xfel_-cripts
 
 .. |PR| image:: https://img.shields.io/badge/PR-Welcome-29ab47ff
-        :target: https://github.com/billingegroup/bglk-euxfel/pulls
+        :target: https://github.com/billingegroup/ufpf-xfel-scripts/pulls
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/bglk-euxfel
-        :target: https://pypi.org/project/bglk-euxfel/
+        :target: https://pypi.org/project/ufpf-xfel-scripts/
 
 .. |PythonVersion| image:: https://img.shields.io/pypi/pyversions/bglk-euxfel
-        :target: https://pypi.org/project/bglk-euxfel/
+        :target: https://pypi.org/project/ufpf-xfel-scripts/
 
 .. |Tracking| image:: https://img.shields.io/badge/issue_tracking-github-blue
-        :target: https://github.com/billingegroup/bglk-euxfel/issues
+        :target: https://github.com/billingegroup/ufpf-xfel-scripts/issues
 
 Scripts and code for XFEL experiments to do ultrafast PDF measurements
 
@@ -43,23 +43,23 @@ Analysis scripts for assessing ultrafast pump probe powder diffraction and PDF m
 Code for assessing figures of merit from ultrafast pump-probed data from the EuXFEL and LCLS.  This was first written
 for the experiment in March 2025 (EuXFEL) and February 2026 (LCLS)
 
-We are working on a cli but there are also Jupyter scripts in `src/bglk_lcls/morph_LCLS_pyfai.ipynb` `src/bglk_euxfel/scripts`
-Functions are in `src/bglk_euxfel/functions.py` and plotters in `src/bglk_euxfel/plotters.py`
+We are working on a cli but there are also Jupyter scripts in `src/ufpdf_xfel_scripts/lcls/scripts` `src/ufpdf_xfel_scripts/euxfel/scripts`
+Functions are in `src/ufpdf_xfel_scripts/lcls/run.py` `src/ufpdf_xfel_scripts/euxfel/functions.py` and plotters in `src/ufpdf_xfel_scripts/lcls/plots.py` `src/ufpdf_xfel_scripts/euxfel/plotters.py`
 
 to use the CLI please use the installation instructions below.
 
 To use the Jupyter notebooks, please use the instructions in the `Getting Started` section
 
-For more information about the `bglk_euxfel` library, please consult our `online documentation <https://billingegroup.github.io/bglk_euxfel>`_.
+For more information about the `ufpdf_xfel_scripts` library, please consult our `online documentation <https://billingegroup.github.io/ufpdf-xfel-scripts>`_.
 
-For more information about the bglk-euxfel library, please consult our `online documentation <https://billingegroup.github.io/bglk-euxfel>`_.
+For more information about the ufpdf_xfel_scripts library, please consult our `online documentation <https://billingegroup.github.io/ufpdf-xfel-scripts>`_.
 
 Citation
 --------
 
-If you use bglk-euxfel in a scientific publication, we would like you to cite this package as
+If you use ufpdf_xfel_scripts in a scientific publication, we would like you to cite this package as
 
-        bglk-euxfel Package, https://github.com/billingegroup/bglk-euxfel
+        ufpdf_xfel_scripts Package, https://github.com/billingegroup/ufpdf-xfel-scripts
 
 Installation
 ------------
@@ -73,41 +73,41 @@ To add "conda-forge" to the conda channels, run the following in a terminal. ::
         conda config --add channels conda-forge
 
 We want to install our packages in a suitable conda environment.
-The following creates and activates a new environment named ``bglk-euxfel_env`` ::
+The following creates and activates a new environment named ``bglk-xfel_env`` ::
 
-        conda create -n bglk-euxfel_env bglk-euxfel python=3.13
-        conda activate bglk-euxfel_env
+        conda create -n bglk-xfel_env ufpdf-xfel-scripts python=3.13
+        conda activate bglk-xfel_env
 
 The output should print the latest version displayed on the badges above.
 
 If the above does not work, you can use ``pip`` to download and install the latest release from
 `Python Package Index <https://pypi.python.org>`_.
-To install using ``pip`` into your ``bglk-euxfel_env`` environment, type ::
+To install using ``pip`` into your ``bglk-xfel_env`` environment, type ::
 
-        pip install bglk-euxfel
+        pip install ufpdf-xfel-scripts
 
 If you prefer to install from sources, after installing the dependencies, obtain the source archive from
-`GitHub <https://github.com/billingegroup/bglk-euxfel/>`_. Once installed, ``cd`` into your ``bglk-euxfel`` directory
+`GitHub <https://github.com/billingegroup/ufpdf-xfel-scripts/>`_. Once installed, ``cd`` into your ``ufpdf-xfel-scripts`` directory
 and run the following ::
 
         pip install .
 
 This package also provides command-line utilities. To check the software has been installed correctly, type ::
 
-        bglk-euxfel --version
+        ufpdf-xfel-scripts --version
 
 You can also type the following command to verify the installation. ::
 
-        python -c "import bglk_euxfel; print(bglk_euxfel.__version__)"
+        python -c "import ufpdf-xfel-scripts; print(ufpdf-xfel-scripts.__version__)"
 
 To view the basic usage and available commands, type ::
 
-        bglk-euxfel -h
+        ufpdf-xfel-scripts -h
 
 Getting Started
 ---------------
 
-You may consult our `online documentation <https://billingegroup.github.io/bglk-euxfel>`_ for tutorials and API references.
+You may consult our `online documentation <https://billingegroup.github.io/ufpdf-xfel-scripts>`_ for tutorials and API references.
 
 ## Installation
 
@@ -120,7 +120,7 @@ We assume that you have miniconda or conda installed
 One time setup:
 
 1. clone the repository or download and unzip the code.
-2. move to the top level folder of the repository. It will be called `bglk_euxfel` and contain the `pyproject.toml` file
+2. move to the top level folder of the repository. It will be called `ufpdf-xfel-scripts` and contain the `pyproject.toml` file
 3. create a python 3.13 conda environment that you will work in, e.g.,::
 
         conda create -n bglk_lcls python=3.13
@@ -134,7 +134,7 @@ One time setup:
         conda install --file requirements/conda.txt
         pip install .
 
-6. You also need to pip install PDFGetX from the .whl that you can find in `mfxl1044925/scratch/PDFGetX`, this requires
+6. You also need to pip install PDFGetX from the .whl that you can find in `mfxl1044925/scratch/setup-data/pdfetx`, this requires
 first setting up a symbolic link from your home directory to the proposal data directory in the LCLS S3DF:
     1. Create a working folder in your S3DF home directory using the New Folder on the homepage and name it something
     distinguishable (e.g., /mfx_ions/)
@@ -146,6 +146,10 @@ first setting up a symbolic link from your home directory to the proposal data d
     but keep /mfxl1044925 at the end::
 
         ln -s /sdf/data/lcls/ds/mfx/mfxl1044925 /sdf/home/l/lkitsu/mfx_ions/mfxl1044925
+
+    4. move to that folder and then move to `mfxl1044925/scratch/setup-data/pdfetx`. Then pip install the wheel::
+
+        pip install diffpy_pdfgetx-2.4.0-cp311-cp311-linux_x86_64.whl
 
 7. if you will be uploading any code edits and making push requests to the repository install and do some more things::
 
@@ -167,12 +171,25 @@ In order to set up the environment in your S3DF account follow these steps:
 To run the code in S3DF:
 
 1. log in to your computer and start a Jupyter notebook
-2. open the jupyter notebook under bgkl_lcls
-3. edit any user-settable parameters in the second cell, such as the run number you want to work on, the q-range you
-want to use for the normalization and the q-range you want to compute the figure of merit over.
-4. Change the path to the input data folder as well as check the other paths in case yours are different.
-4. run the notebook. The safest way to do it is using the double-chevron that restarts the kernel and runs all the cels
-5. Good luck!
+2. create a folder on your home directory named dev
+3. move to that directory from terminal::
+
+        cd dev
+
+4. clone the github repository. If you have SSH to you git account setup::
+
+        git clone git@github.com:Billingegroup/ufpdf-xfel-scripts.git
+
+    If you don't have SSH you can use HTTPS::
+
+        https://github.com/Billingegroup/ufpdf-xfel-scripts.git
+
+5. this will create a folder inside your dev folder containing all the repository. To use the jupyter notebook for
+looking at different runs, move to src/ufpdf_xfel_scripts/lcls/scripts/preview_single_run.ipynb and open it
+6. edit any user-settable parameters in the first few cells, such as the run number you want to work on, the q-range you
+want to use for the normalization and the q-range you want to compute the figure of merit over, etc.
+7. run the notebook. The safest way to do it is using the double-chevron that restarts the kernel and runs all the cels
+8. Good luck!
 
 
 For EuXFEL:
