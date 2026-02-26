@@ -14,7 +14,7 @@ experiment_dir = (
     / experiment_number
 )
 synchrotron_data_dir = (
-    Path(__file__).parent / ".." / ".." / "data" / "synchrotron-data"
+    Path(__file__).parent / ".." / ".." / ".." / "data" / "synchrotron-data"
 )
 synchrotron_data_dir = synchrotron_data_dir.resolve()
 experiment_dir = experiment_dir.resolve()
