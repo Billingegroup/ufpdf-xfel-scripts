@@ -219,16 +219,20 @@ class Run:
     def _average_equal_times(self):
         # average repeated delays
         self.unique_delays = np.unique(self.delays)
-
         Is_avg_on = []
         Is_avg_off = []
         Is_avg_on_mon1 = []
         Is_avg_off_mon1 = []
         Is_avg_on_mon2 = []
         Is_avg_off_mon2 = []
-        for ud in self.unique_delays:
-            mask_on = (self.delays == ud) & self.laser_mask
-            mask_off = (self.delays == ud) & ~self.laser_mask
+        valid_delays = []
+
+        for unique_delay in self.unique_delays:
+            mask_on = (self.delays == unique_delay) & self.laser_mask
+            mask_off = (self.delays == unique_delay) & ~self.laser_mask
+            if not (mask_on.any() and mask_off.any()):
+                continue
+            valid_delays.append(unique_delay)
             Is_avg_on.append(np.nanmean(self._Is_raw[mask_on], axis=0))
             Is_avg_off.append(np.nanmean(self._Is_raw[mask_off], axis=0))
             Is_avg_on_mon1.append(
@@ -260,6 +264,9 @@ class Run:
                 )
             )
 
+        self.unique_delays = np.asarray(
+            valid_delays
+        )  # filter down to valid delay pairs
         self.raw_delays = {}
         for i, step in enumerate(self.unique_delays):
             self.raw_delay_scans = self._build_delay_dict(
