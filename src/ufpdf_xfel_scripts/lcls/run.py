@@ -131,14 +131,17 @@ class Run:
         r_max_fom=5,
         q_min_morph=0,
         q_max_morph=12,
-        scale=1.01,
-        stretch=None,
-        smear=None,
+        delay_scale=1.01,
+        delay_hshift=None,
+        delay_vshift=None,
+        delay_stretch=None,
+        delay_smear=None,
         points_away_t0_plot_on_off=0,
         verbose=False,
         delay_motor="mfx_lxt_fast2",
         pdfgetter_config=None,
-        squeeze_parms=None,
+        getx_scale=1,
+        getx_squeeze_parms=None,
         fit_qmin=0,
         fit_qmax=12,
         pdf_rmin=0,
@@ -157,7 +160,8 @@ class Run:
         self.number_of_static_samples = number_of_static_samples
         self.delay_motor = delay_motor
         self.pdfgetter_config = pdfgetter_config
-        self.squeeze = squeeze_parms
+        self.getx_scale = getx_scale
+        self.getx_squeeze = getx_squeeze_parms
         self.verbose = verbose
         self.bad_background_bool = False
         self.azimuthal_selector = azimuthal_selector
@@ -175,9 +179,11 @@ class Run:
         self.morph_params = {
             "xmin": q_min_morph,
             "xmax": q_max_morph,
-            "scale": scale,
-            "stretch": stretch,
-            "smear": smear,
+            "scale": delay_scale,
+            "hshift": delay_hshift,
+            "vshift": delay_vshift,
+            "stretch": delay_stretch,
+            "smear": delay_smear,
         }
         self.points_away_t0_plot_on_off = points_away_t0_plot_on_off
 
@@ -328,8 +334,8 @@ class Run:
             morph_table,
             target_table,
             funcxy=(self.pdfgetter_function, self.pdfgetter_config),
-            scale=1,
-            squeeze=self.squeeze,
+            scale=self.getx_scale,
+            squeeze=self.getx_squeeze,
             xmin=self.fit_qmin,
             xmax=self.fit_qmax,
         )
@@ -651,6 +657,8 @@ class Run:
                 morph_on_table,
                 target_table,
                 scale=morph_parameters_on.get("scale"),
+                hshift=morph_parameters_on.get("hshift"),
+                vshift=morph_parameters_on.get("vshift"),
                 stretch=morph_parameters_on.get("stretch"),
                 smear=morph_parameters_on.get("smear"),
                 apply=True,
@@ -659,6 +667,8 @@ class Run:
                 morph_off_table,
                 target_table,
                 scale=morph_parameters_off.get("scale"),
+                hshift=morph_parameters_off.get("hshift"),
+                vshift=morph_parameters_off.get("vshift"),
                 stretch=morph_parameters_off.get("stretch"),
                 smear=morph_parameters_off.get("smear"),
                 apply=True,
