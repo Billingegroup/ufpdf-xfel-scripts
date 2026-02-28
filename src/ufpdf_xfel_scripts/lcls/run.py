@@ -137,7 +137,7 @@ class Run:
         fit_qmax=12,
         pdf_rmin=0,
         pdf_rmax=60,
-        azimuthal_selector="total",
+        azimuthal_selector=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
     ):
         # --- store run-level metadata ---
         self.run_number = run_number
@@ -464,18 +464,7 @@ class Run:
         with h5py.File(input_path, "r") as f:
             qs = np.asarray(f["jungfrau"]["pyfai_q"][:])
             Is_raw = np.asarray(f["jungfrau"]["pyfai_azav"][:])
-            if self.azimuthal_selector == "vertical":
-                selected_slices = [
-                    0,
-                    6,
-                    12,
-                ]  # This can be changed, could be an input
-                Is_raw = np.nanmean(Is_raw[:, selected_slices, :], axis=1)
-            elif self.azimuthal_selector == "horitzontal":
-                selected_slices = [2, 3, 9, 10]
-                Is_raw = np.nanmean(Is_raw[:, selected_slices, :], axis=1)
-            else:
-                Is_raw = np.nanmean(Is_raw, axis=1)
+            Is_raw = np.nanmean(Is_raw[:, self.azimuthal_selector, :], axis=1)
             monitor1 = np.asarray(f["MfxDg1BmMon/totalIntensityJoules"][:])
             monitor2 = np.asarray(f["MfxDg2BmMon/totalIntensityJoules"][:])
 

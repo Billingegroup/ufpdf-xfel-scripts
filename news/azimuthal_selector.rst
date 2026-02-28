@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* <news item>
+* No news added: adding azimuthal selector
 
 **Deprecated:**
 
