@@ -590,3 +590,65 @@ def plot_time_resolved_window_map(
 
     plt.tight_layout()
     plt.show()
+
+
+def plot_morph_parameters(
+    morph_parameters, exclude_keys=("xmin", "xmax", "xstep")
+):
+
+    delays = np.array(sorted(morph_parameters.keys()))
+
+    name_dict = morph_parameters[delays[0]][0]
+    param_names = [k for k in name_dict.keys() if k not in exclude_keys]
+
+    param_on = {}
+    param_off = {}
+
+    for param in param_names:
+        values_on = []
+        values_off = []
+
+        for d in delays:
+            v_on = morph_parameters[d][0].get(param, None)
+            v_off = morph_parameters[d][1].get(param, None)
+
+            values_on.append(np.nan if v_on is None else float(v_on))
+            values_off.append(np.nan if v_off is None else float(v_off))
+
+        param_on[param] = np.array(values_on)
+        param_off[param] = np.array(values_off)
+
+    varying_params = []
+    for param in param_names:
+        combined = np.concatenate([param_on[param], param_off[param]])
+        if not np.allclose(
+            combined[~np.isnan(combined)], combined[~np.isnan(combined)][0]
+        ):
+            varying_params.append(param)
+
+    n_params = len(varying_params)
+    ncols = 1
+    nrows = (n_params + ncols - 1) // ncols
+
+    fig, axs = plt.subplots(
+        nrows, ncols, figsize=(6 * ncols, 3 * nrows), sharex=True
+    )
+    axs = np.atleast_1d(axs).flatten()
+
+    for i, param in enumerate(varying_params):
+
+        axs[i].plot(delays, param_on[param], marker="o", label="ON")
+
+        axs[i].plot(delays, param_off[param], marker="s", label="OFF")
+
+        axs[i].set_ylabel(param)
+        axs[i].set_title(param)
+        axs[i].legend()
+
+    for j in range(i + 1, len(axs)):
+        fig.delaxes(axs[j])
+
+    axs[-1].set_xlabel("Delay")
+
+    plt.tight_layout()
+    plt.show()
