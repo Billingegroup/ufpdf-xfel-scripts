@@ -1,0 +1,7 @@
+Cell,Well,Sample ,Scan Type,Run #,THz ,Transmission,Number of Frames per step,"Delay : Start, Stop (ps), npts",Notes ,Detector Position (cm),"x,y position of beam on sample",Run quality check
+N/A,N/A,N/A,Beamline Alignment ,1,,,,,,,,
+1,4,LaB6,,2,,,,,"2 Mins of total Data, but no images were saved.",10,,
+1,8,Bi,Delay,3,,,,,First Attempt at Delay scan with Bi,10,,
+1,4,LaB6,Static ,4,,,,,"Motor Position 340mm, Detector distance 100mm",10,,
+1,5,HVG + Kapton,Attenuation Series,5,,,,,"Motor position 279 mm, detector distance43mm",4,,
+2,7,Empty,Static ,6,,,,,"Background from Quartz, just looking at window. ",,,
