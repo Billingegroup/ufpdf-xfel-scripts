@@ -126,6 +126,7 @@ class Run:
         q_min_morph=0,
         q_max_morph=12,
         scale=1.01,
+        hshift=None,
         stretch=None,
         smear=None,
         points_away_t0_plot_on_off=0,
@@ -168,6 +169,7 @@ class Run:
             "xmin": q_min_morph,
             "xmax": q_max_morph,
             "scale": scale,
+            "hshift": hshift,
             "stretch": stretch,
             "smear": smear,
         }
