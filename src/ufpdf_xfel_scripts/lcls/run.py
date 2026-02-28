@@ -79,6 +79,14 @@ class Run:
     azimuthal_selector : str
         The selection between vertical, horitzontal or total azimuthal
         integration.
+    i0_percentile_threshold : float or None
+        The percentile of i0 intensities to drop. A value of 5 will filter
+        and drop the lowest 5% of i0 intensities.
+        (default 5, None disables the filter.)
+    jitter_threshold_fs : float
+        The threshold for jitter time-offsets to ignore. time-offsets >=
+        jitter_threshold will be filtered and dropped. Units are
+        femtoseconds. (default 250, None disables the filter.)
 
     Attributes
     ----------
@@ -141,6 +149,8 @@ class Run:
         pdf_rmin=0,
         pdf_rmax=60,
         azimuthal_selector=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        i0_percentile_threshold=5,
+        jitter_threshold_fs=250.0,
     ):
         # --- store run-level metadata ---
         self.run_number = run_number
@@ -179,8 +189,21 @@ class Run:
         }
         self.points_away_t0_plot_on_off = points_away_t0_plot_on_off
 
+        # --- filtering defaults ---
+        self.i0_percentile_threshold = i0_percentile_threshold
+        self.jitter_threshold_fs = jitter_threshold_fs
+        self.plt_filter_cutoff_diode = None
+        # Convert jitter_threshold from femtoseconds to picoseconds
+        # if not 'None' type (1 ps = 1e3 fs).
+        self.plt_filter_cutoff_time = (
+            None
+            if self.jitter_threshold_fs is None
+            else float(self.jitter_threshold_fs) * 1e-3
+        )
+
         # --- run the reduction pipeline ---
         self._load()
+        self._filter()
         self._reduce()
         self._morph()
         try:
@@ -480,6 +503,8 @@ class Run:
             Is_raw = np.nanmean(Is_raw[:, self.azimuthal_selector, :], axis=1)
             monitor1 = np.asarray(f["MfxDg1BmMon/totalIntensityJoules"][:])
             monitor2 = np.asarray(f["MfxDg2BmMon/totalIntensityJoules"][:])
+            time_jitter = np.asarray(f["/tt/fltpos_ps"][:])
+            timestamp = np.asarray(f["/timestamp"][:])
 
             self.delay_scan = (
                 "scan" in f
@@ -507,7 +532,107 @@ class Run:
         self.darks = Is_raw[~xray_mask].copy()
         self.delays = delays[xray_mask].copy()
         self.laser_mask = laser_mask[xray_mask].copy()
+        self.time_jitter = time_jitter[xray_mask].copy()
+        self.timestamp = timestamp[xray_mask].copy()
         return
+
+    def _filter(self):
+        """Filter shots using monitor2 (diode) and time_jitter
+        metadata."""
+        # filter 1: monitor2 (diode)
+        if self.i0_percentile_threshold is not None:
+            self.plt_filter_pre_monitor2 = self.monitor2.copy()
+            if not (0.0 < float(self.i0_percentile_threshold) < 100.0):
+                raise ValueError(
+                    "i0_percentile_threshold must be in (0, 100)."
+                )
+            keep_diode_mask = np.isfinite(self.monitor2) & (
+                self.monitor2 != 0.0
+            )
+            if keep_diode_mask.any():
+                self.plt_filter_cutoff_diode = float(
+                    np.quantile(
+                        self.monitor2[keep_diode_mask],
+                        self.i0_percentile_threshold / 100.0,
+                    )
+                )
+                keep_diode_mask &= (
+                    self.monitor2 >= self.plt_filter_cutoff_diode
+                )
+            self.plt_filter_keep_diode = keep_diode_mask.copy()
+            if self.verbose:
+                removed = int(np.sum(~keep_diode_mask))
+                total = int(self.monitor2.shape[0])
+                zeros = int(
+                    np.sum(np.isfinite(self.monitor2) & (self.monitor2 == 0.0))
+                )
+                msg = (
+                    "[DBG] _filter diode (mon2):\n"
+                    f"  removed: {removed}/{total}\n"
+                    f"  zeros: {zeros}\n"
+                    f"  i0 pct threshold: {self.i0_percentile_threshold}\n"
+                    f"  low quantile cutoff: {self.plt_filter_cutoff_diode}"
+                )
+                print(msg)
+            self._Is_raw = self._Is_raw[keep_diode_mask, :].copy()
+            self.monitor1 = self.monitor1[keep_diode_mask].copy()
+            self.monitor2 = self.monitor2[keep_diode_mask].copy()
+            self.laser_mask = self.laser_mask[keep_diode_mask].copy()
+            if self.time_jitter is not None:
+                self.time_jitter = self.time_jitter[keep_diode_mask].copy()
+            if bool(self.delay_scan) and self.delays is not None:
+                self.delays = self.delays[keep_diode_mask].copy()
+            if self.timestamp is not None:
+                self.timestamp = self.timestamp[keep_diode_mask].copy()
+
+        # filter 2: time_jitter
+        if self.jitter_threshold_fs is None:
+            return
+        finite_time_mask = np.isfinite(self.time_jitter)
+        if not finite_time_mask.any():
+            return
+        if float(self.jitter_threshold_fs) <= 0.0:
+            raise ValueError("jitter_threshold_fs must be > 0 or None.")
+        self.plt_filter_pre_time = self.time_jitter.copy()
+        if self.timestamp is not None:
+            self.plt_filter_pre_timestamp = self.timestamp.copy()
+        jitter_negative_count = int(
+            np.sum(self.time_jitter[finite_time_mask] < 0.0)
+        )
+        keep_time_mask = finite_time_mask & (self.time_jitter >= 0.0)
+        keep_time_mask &= self.time_jitter <= self.plt_filter_cutoff_time
+        if hasattr(self, "plt_filter_keep_diode"):
+            self.plt_filter_keep_time = np.zeros(
+                self.plt_filter_keep_diode.shape, dtype=bool
+            )
+            self.plt_filter_keep_time[self.plt_filter_keep_diode] = (
+                keep_time_mask
+            )
+        else:
+            self.plt_filter_keep_time = keep_time_mask.copy()
+        if self.verbose:
+            min_ps = float(np.min(self.time_jitter[finite_time_mask]))
+            max_ps = float(np.max(self.time_jitter[finite_time_mask]))
+            msg = (
+                "[DBG] _filter time jitter:\n"
+                f"  threshold (fs): {self.jitter_threshold_fs}\n"
+                f"  threshold (ps): {self.plt_filter_cutoff_time}\n"
+                f"  negative time jitter count: {jitter_negative_count}\n"
+                f"  removed: {int(np.sum(~keep_time_mask))}"
+                f"/{int(self.time_jitter.shape[0])}\n"
+                f"  min_ps: {min_ps:.3f}\n"
+                f"  max_ps: {max_ps:.3f}"
+            )
+            print(msg)
+        self._Is_raw = self._Is_raw[keep_time_mask, :].copy()
+        self.monitor1 = self.monitor1[keep_time_mask].copy()
+        self.monitor2 = self.monitor2[keep_time_mask].copy()
+        self.time_jitter = self.time_jitter[keep_time_mask].copy()
+        self.laser_mask = self.laser_mask[keep_time_mask].copy()
+        if bool(self.delay_scan) and self.delays is not None:
+            self.delays = self.delays[keep_time_mask].copy()
+        if self.timestamp is not None:
+            self.timestamp = self.timestamp[keep_time_mask].copy()
 
     def _reduce(self):
         """Build raw_delays dict (unmorphed) from the reduced arrays."""
