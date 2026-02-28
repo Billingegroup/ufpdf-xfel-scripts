@@ -43,7 +43,7 @@ class Run:
     background_number : int
         The background run number (e.g. 1).
     sample_name : str
-        The hort sample label used in file names (e.g. 'NSPSe').
+        The short sample label used in file names (e.g. 'NSPSe').
     sample_composition : str
         The chemical composition string for PDFGetter (e.g. 'Na11SnPSe12').
     instrument : str
@@ -76,6 +76,9 @@ class Run:
     verbose : bool
         The verbosity for debugging and assessing (default, False, is
         low verbosity).
+    azimuthal_selector : str
+        The selection between vertical, horitzontal or total azimuthal
+        integration.
 
     Attributes
     ----------
@@ -134,6 +137,7 @@ class Run:
         fit_qmax=12,
         pdf_rmin=0,
         pdf_rmax=60,
+        azimuthal_selector=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
     ):
         # --- store run-level metadata ---
         self.run_number = run_number
@@ -148,6 +152,7 @@ class Run:
         self.squeeze = squeeze_parms
         self.verbose = verbose
         self.bad_background_bool = False
+        self.azimuthal_selector = azimuthal_selector
 
         # --- store setup parameters ---
         self.target_id = target_id
@@ -466,7 +471,7 @@ class Run:
         with h5py.File(input_path, "r") as f:
             qs = np.asarray(f["jungfrau"]["pyfai_q"][:])
             Is_raw = np.asarray(f["jungfrau"]["pyfai_azav"][:])
-            Is_raw = np.nanmean(Is_raw, axis=1)
+            Is_raw = np.nanmean(Is_raw[:, self.azimuthal_selector, :], axis=1)
             monitor1 = np.asarray(f["MfxDg1BmMon/totalIntensityJoules"][:])
             monitor2 = np.asarray(f["MfxDg2BmMon/totalIntensityJoules"][:])
 
