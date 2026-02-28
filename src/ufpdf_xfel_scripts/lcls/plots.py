@@ -590,3 +590,114 @@ def plot_time_resolved_window_map(
 
     plt.tight_layout()
     plt.show()
+
+
+def plot_morph_parameters(
+    morph_parameters_dict, exclude_parameters=("xmin", "xmax", "xstep")
+):
+    """Plot morph fit parameters as a function of delay.
+
+    Parameters
+    ----------
+    morph_parameters_dict : dict
+        Dictionary with structure:
+            {
+                delay_1: [on_result_dict, off_result_dict],
+                delay_2: [on_result_dict, off_result_dict],
+                ...
+            }
+
+        Each result_dict contains fitted morph parameters
+        such as: scale, stretch, shift, Rw, Pearson, etc.
+
+    exclude_parameters : tuple of str
+        Parameter names that should not be plotted.
+    """
+    sorted_delays = np.array(sorted(morph_parameters_dict.keys()))
+
+    first_delay = sorted_delays[0]
+    first_on_result = morph_parameters_dict[first_delay][0]
+    morph_parameter_names = [
+        name
+        for name in first_on_result.keys()
+        if name not in exclude_parameters
+    ]
+
+    parameter_values_on = {}
+    parameter_values_off = {}
+
+    for parameter_name in morph_parameter_names:
+
+        on_values = []
+        off_values = []
+
+        for delay in sorted_delays:
+
+            on_dict, off_dict = morph_parameters_dict[delay]
+
+            on_value = on_dict.get(parameter_name)
+            off_value = off_dict.get(parameter_name)
+
+            on_values.append(np.nan if on_value is None else float(on_value))
+            off_values.append(
+                np.nan if off_value is None else float(off_value)
+            )
+
+        parameter_values_on[parameter_name] = np.array(on_values)
+        parameter_values_off[parameter_name] = np.array(off_values)
+
+    parameters_that_vary = []
+
+    for parameter_name in morph_parameter_names:
+
+        combined_values = np.concatenate(
+            [
+                parameter_values_on[parameter_name],
+                parameter_values_off[parameter_name],
+            ]
+        )
+
+        valid_values = combined_values[~np.isnan(combined_values)]
+
+        if len(valid_values) > 0 and not np.allclose(
+            valid_values, valid_values[0]
+        ):
+            parameters_that_vary.append(parameter_name)
+
+    n_parameters = len(parameters_that_vary)
+
+    ncols = 1
+    nrows = n_parameters
+
+    fig, axes = plt.subplots(
+        nrows,
+        ncols,
+        figsize=(6, 4 * n_parameters),
+    )
+
+    axes = np.atleast_1d(axes).flatten()
+
+    for axis, parameter_name in zip(axes, parameters_that_vary):
+
+        axis.plot(
+            sorted_delays,
+            parameter_values_on[parameter_name],
+            marker="o",
+            label="ON",
+        )
+
+        axis.plot(
+            sorted_delays,
+            parameter_values_off[parameter_name],
+            marker="s",
+            label="OFF",
+        )
+
+        axis.set_ylabel(parameter_name)
+        axis.set_title(f"{parameter_name} vs delay")
+        axis.legend()
+
+    axes[-1].set_xlabel("Delay")
+
+    plt.tight_layout()
+    plt.show()
