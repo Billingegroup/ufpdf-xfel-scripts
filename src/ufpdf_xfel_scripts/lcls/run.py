@@ -80,11 +80,13 @@ class Run:
         The selection between vertical, horitzontal or total azimuthal
         integration.
     i0_percentile_threshold : float or None
-        Drop the lowest fraction of nonzero, finite monitor2 values
-        (default 0.05, None disables).
+        The percentile of i0 intensities to drop. A value of 5 will filter
+        and drop the lowest 5% of i0 intensities.
+        (default 5, None disables the filter.)
     jitter_threshold_fs : float
-        Drop time jitter values >= this value in femptoseconds
-        (default 250 fs, None disables).
+        The threshold for jitter time-offsets to ignore. time-offsets >=
+        jitter_threshold will be filtered and dropped. Units are
+        femtoseconds. (default 250, None disables the filter.)
 
     Attributes
     ----------
@@ -147,7 +149,7 @@ class Run:
         pdf_rmin=0,
         pdf_rmax=60,
         azimuthal_selector=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-        i0_percentile_threshold=0.05,
+        i0_percentile_threshold=5,
         jitter_threshold_fs=250.0,
     ):
         # --- store run-level metadata ---
@@ -190,6 +192,14 @@ class Run:
         # --- filtering defaults ---
         self.i0_percentile_threshold = i0_percentile_threshold
         self.jitter_threshold_fs = jitter_threshold_fs
+        self.plt_filter_cutoff_diode = None
+        # Convert jitter_threshold from femtoseconds to picoseconds
+        # if not 'None' type (1 ps = 1e3 fs).
+        self.plt_filter_cutoff_time = (
+            None
+            if self.jitter_threshold_fs is None
+            else float(self.jitter_threshold_fs) * 1e-3
+        )
 
         # --- run the reduction pipeline ---
         self._load()
@@ -530,23 +540,26 @@ class Run:
         """Filter shots using monitor2 (diode) and time_jitter
         metadata."""
         # filter 1: monitor2 (diode)
-        self.filter_cutoff_diode = None
         if self.i0_percentile_threshold is not None:
-            self._filter_pre_monitor2 = self.monitor2.copy()
-            if not (0.0 < float(self.i0_percentile_threshold) < 1.0):
-                raise ValueError("i0_percentile_threshold must be in (0, 1).")
+            self.plt_filter_pre_monitor2 = self.monitor2.copy()
+            if not (0.0 < float(self.i0_percentile_threshold) < 100.0):
+                raise ValueError(
+                    "i0_percentile_threshold must be in (0, 100)."
+                )
             keep_diode_mask = np.isfinite(self.monitor2) & (
                 self.monitor2 != 0.0
             )
             if keep_diode_mask.any():
-                self.filter_cutoff_diode = float(
+                self.plt_filter_cutoff_diode = float(
                     np.quantile(
                         self.monitor2[keep_diode_mask],
-                        self.i0_percentile_threshold,
+                        self.i0_percentile_threshold / 100.0,
                     )
                 )
-                keep_diode_mask &= self.monitor2 >= self.filter_cutoff_diode
-            self.filter_keep_diode = keep_diode_mask.copy()
+                keep_diode_mask &= (
+                    self.monitor2 >= self.plt_filter_cutoff_diode
+                )
+            self.plt_filter_keep_diode = keep_diode_mask.copy()
             if self.verbose:
                 removed = int(np.sum(~keep_diode_mask))
                 total = int(self.monitor2.shape[0])
@@ -558,7 +571,7 @@ class Run:
                     f"  removed: {removed}/{total}\n"
                     f"  zeros: {zeros}\n"
                     f"  i0 pct threshold: {self.i0_percentile_threshold}\n"
-                    f"  low quantile cutoff: {self.filter_cutoff_diode}"
+                    f"  low quantile cutoff: {self.plt_filter_cutoff_diode}"
                 )
                 print(msg)
             self._Is_raw = self._Is_raw[keep_diode_mask, :].copy()
@@ -573,7 +586,6 @@ class Run:
                 self.timestamp = self.timestamp[keep_diode_mask].copy()
 
         # filter 2: time_jitter
-        self.filter_cutoff_time = None
         if self.jitter_threshold_fs is None:
             return
         finite_time_mask = np.isfinite(self.time_jitter)
@@ -581,24 +593,31 @@ class Run:
             return
         if float(self.jitter_threshold_fs) <= 0.0:
             raise ValueError("jitter_threshold_fs must be > 0 or None.")
-        self._filter_pre_time = self.time_jitter.copy()
+        self.plt_filter_pre_time = self.time_jitter.copy()
         if self.timestamp is not None:
-            self._filter_pre_timestamp = self.timestamp.copy()
-        self.filter_cutoff_time = float(self.jitter_threshold_fs) * 1e-3
-        keep_time_mask = finite_time_mask & (
-            np.abs(self.time_jitter) <= self.filter_cutoff_time
+            self.plt_filter_pre_timestamp = self.timestamp.copy()
+        jitter_negative_count = int(
+            np.sum(self.time_jitter[finite_time_mask] < 0.0)
         )
-        self.filter_keep_time = np.zeros(
-            self.filter_keep_diode.shape, dtype=bool
-        )
-        self.filter_keep_time[self.filter_keep_diode] = keep_time_mask
+        keep_time_mask = finite_time_mask & (self.time_jitter >= 0.0)
+        keep_time_mask &= self.time_jitter <= self.plt_filter_cutoff_time
+        if hasattr(self, "plt_filter_keep_diode"):
+            self.plt_filter_keep_time = np.zeros(
+                self.plt_filter_keep_diode.shape, dtype=bool
+            )
+            self.plt_filter_keep_time[self.plt_filter_keep_diode] = (
+                keep_time_mask
+            )
+        else:
+            self.plt_filter_keep_time = keep_time_mask.copy()
         if self.verbose:
             min_ps = float(np.min(self.time_jitter[finite_time_mask]))
             max_ps = float(np.max(self.time_jitter[finite_time_mask]))
             msg = (
                 "[DBG] _filter time jitter:\n"
-                f"  threshold_fs: {self.jitter_threshold_fs}\n"
-                f"  threshold_ps: {self.filter_cutoff_time}\n"
+                f"  threshold (fs): {self.jitter_threshold_fs}\n"
+                f"  threshold (ps): {self.plt_filter_cutoff_time}\n"
+                f"  negative time jitter count: {jitter_negative_count}\n"
                 f"  removed: {int(np.sum(~keep_time_mask))}"
                 f"/{int(self.time_jitter.shape[0])}\n"
                 f"  min_ps: {min_ps:.3f}\n"
