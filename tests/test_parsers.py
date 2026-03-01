@@ -1,14 +1,24 @@
 import json
-from pathlib import Path
 
 from ufpdf_xfel_scripts.lcls.parsers import csv_to_json
 
+MOCK_CSV = """Cell,Well,Sample ,Scan Type,Run #,THz ,Transmission,Number of Frames per step,"Delay : Start, Stop (ps), npts",Notes ,Detector Position (cm),"x,y position of beam on sample",Run quality check
+N/A,N/A,N/A,Beamline Alignment ,1,,,,,,,,
+1,4,LaB6,,2,,,,,"2 Mins of total Data, but no images were saved.",10,,
+1,8,Bi,Delay,3,,,,,First Attempt at Delay scan with Bi,10,,
+1,4,LaB6,Static ,4,,,,,"Motor Position 340mm, Detector distance 100mm",10,,
+1,5,HVG + Kapton,Attenuation Series,5,,,,,"Motor position 279 mm, detector distance43mm",4,,
+2,7,Empty,Static ,6,,,,,"Background from Quartz, just looking at window. ",,,
+"""  # noqa E501
 
-def test_csv_to_json(tmp_path):
-    here = Path(__file__).parent
-    csv_path = here / "data" / "example_runlog.csv"
+
+def test_csv_to_json(mocker, tmp_path):
+    mock_response = mocker.MagicMock()
+    mock_response.text = MOCK_CSV
+    mock_response.raise_for_status.return_value = None
+    mocker.patch("your_module.requests.get", return_value=mock_response)
     json_path = tmp_path / "example_runlog.json"
-    csv_to_json(csv_path, json_path)
+    csv_to_json("https://fake-url.com", json_path)
     with open(json_path) as json_file:
         actual = json.load(json_file)
     expected = expected_csv_to_json
