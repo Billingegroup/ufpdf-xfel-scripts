@@ -117,43 +117,43 @@ class Run:
     # construction
     # ------------------------------------------------------------------
 
-    def __init__(
-        self,
-        run_number,
-        background_number,
-        sample_name,
-        sample_composition,
-        instrument,
-        experiment_number,
-        number_of_static_samples=11,
-        target_id=0,
-        q_min=9,
-        q_max=9.5,
-        r_min_fom=2,
-        r_max_fom=5,
-        q_min_morph=0,
-        q_max_morph=12,
-        delay_scale=1.01,
-        delay_hshift=None,
-        delay_vshift=None,
-        delay_stretch=None,
-        delay_smear=None,
-        points_away_t0_plot_on_off=0,
-        verbose=False,
-        delay_motor="mfx_lxt_fast2",
-        pdfgetter_config=None,
-        getx_scale=1,
-        getx_squeeze_parms=None,
-        fit_qmin=0,
-        fit_qmax=12,
-        pdf_rmin=0,
-        pdf_rmax=60,
-        azimuthal_selector=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-        i0_percentile_threshold=5,
-        jitter_threshold_fs=250.0,
-    ):
+    def __init__(self, run_number_int, kwargs):
+        sample_name = "test"
+        sample_composition = "NaCl"
+        instrument = "MFX"
+        experiment_number = 10449
+        number_of_static_samples = 11
+        target_id = 0
+        q_min = 9
+        q_max = 9.5
+        r_min_fom = 2
+        r_max_fom = 5
+        q_min_morph = 0
+        q_max_morph = 12
+        delay_scale = 1.01
+        delay_hshift = None
+        delay_vshift = None
+        delay_stretch = None
+        delay_smear = None
+        points_away_t0_plot_on_off = 0
+        verbose = False
+        delay_motor = "mfx_lxt_fast2"
+        pdfgetter_config = None
+        getx_scale = 1
+        getx_squeeze_parms = None
+        fit_qmin = 0
+        fit_qmax = 12
+        pdf_rmin = 0
+        pdf_rmax = 60
+        azimuthal_selector = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        i0_percentile_threshold = 5
+        jitter_threshold_fs = 250.0
+        # ):
         # --- store run-level metadata ---
+        background_number = None
+        run_number = str(run_number_int)
         self.run_number = run_number
+        # rundict = kwargs.get(run_number)
         self.background_number = background_number
         self.sample_name = sample_name
         self.sample_composition = sample_composition
@@ -771,3 +771,9 @@ class Run:
                 self.gr_delay_scans, delay_t, r, gr_on, gr_off
             )
         return
+
+
+if __name__ == "__main__":
+    minimal_run = {"10": {"sample_name": "my_sample"}}
+    testrun = Run(10, minimal_run)
+    print(testrun.run_number)

@@ -16,7 +16,7 @@ def test_csv_to_json(mocker, tmp_path):
     mock_response = mocker.MagicMock()
     mock_response.text = MOCK_CSV
     mock_response.raise_for_status.return_value = None
-    mocker.patch("your_module.requests.get", return_value=mock_response)
+    mocker.patch("requests.get", return_value=mock_response)
     json_path = tmp_path / "example_runlog.json"
     csv_to_json("https://fake-url.com", json_path)
     with open(json_path) as json_file:
