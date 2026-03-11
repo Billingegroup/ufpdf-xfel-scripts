@@ -1,7 +1,10 @@
 import csv
+import io
 import json
 import re
-import sys
+from pathlib import Path
+
+import requests
 
 
 def to_snake_case(name):
@@ -11,17 +14,18 @@ def to_snake_case(name):
     return name
 
 
-def csv_to_json(csv_path, json_path):
+def csv_to_json(runlog_url, json_path):
+    payload = requests.get(runlog_url)
+    payload.raise_for_status()
+    reader = csv.DictReader(io.StringIO(payload.text))
     result = {}
-    with open(csv_path, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            run_num = row.get("Run #", "").strip()
-            try:
-                key = int(run_num)
-            except (ValueError, TypeError):
-                continue  # Skip rows without a valid integer Run #
-            result[key] = {to_snake_case(col): val for col, val in row.items()}
+    for row in reader:
+        run_num = row.get("Run #", "").strip()
+        try:
+            key = int(run_num)
+        except (ValueError, TypeError):
+            continue
+        result[key] = {to_snake_case(col): val for col, val in row.items()}
 
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(result, f, indent=2)
@@ -29,8 +33,11 @@ def csv_to_json(csv_path, json_path):
     return
 
 
+def main():
+    runlog_url = "https://docs.google.com/spreadsheets/d/155-Pae4rAD17RCBqGwFKtvVysDgTgsfsxgUWiHb7vSM/export?format=csv&gid=0"  # noqa E501
+    json_path = Path().cwd() / "test.json"
+    csv_to_json(runlog_url, json_path)
+
+
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python csv_to_json.py <input.csv> <output.json>")
-        sys.exit(1)
-    csv_to_json(sys.argv[1], sys.argv[2])
+    main()
